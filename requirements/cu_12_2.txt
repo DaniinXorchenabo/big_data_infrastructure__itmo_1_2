@@ -54,3 +54,4 @@ onnxruntime==1.20.1
 sympy==1.13.1
 jax
 git+https://github.com/aaguirreme/multiZ-py.git
+
