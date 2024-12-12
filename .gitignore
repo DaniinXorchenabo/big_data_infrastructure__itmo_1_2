@@ -2,6 +2,8 @@
 /**/.ipynb_checkpoints/**/*
 /**/__pycache__/**/*
 /data/**/*
+/dataset/**/*
+/datasets/**/*
 /logs/**/*
 /weights/**/*
 /tmp/**/*
@@ -22,3 +24,5 @@
 /**/*.jpg
 /**/*.jpeg
 /**/*.pdf
+/**/*.csv
+/**/*.xml
