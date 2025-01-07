@@ -56,3 +56,7 @@ jax
 git+https://github.com/aaguirreme/multiZ-py.git
 nltk
 pymorphy3
+simplemma
+html2text
+wikitextparser
+gensim
