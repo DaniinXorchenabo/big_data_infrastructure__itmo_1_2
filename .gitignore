@@ -26,3 +26,6 @@
 /**/*.pdf
 /**/*.csv
 /**/*.xml
+/external/**/*
+/**/jupyter_config/lab/**/*
+/**/jupyter_config/notebook/**/*
