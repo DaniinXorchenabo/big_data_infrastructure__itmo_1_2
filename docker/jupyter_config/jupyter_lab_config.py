@@ -906,11 +906,11 @@ if bool(os.environ.get('JUPYTER_LAB_CONFIG', '')):
 
 ## DEPRECATED. Use ZMQChannelsWebsocketConnection.iopub_data_rate_limit
 #  Default: 0.0
-# c.ServerApp.iopub_data_rate_limit = 0.0
+c.ServerApp.iopub_data_rate_limit = 100_000_000
 
 ## DEPRECATED. Use ZMQChannelsWebsocketConnection.iopub_msg_rate_limit
 #  Default: 0.0
-# c.ServerApp.iopub_msg_rate_limit = 0.0
+c.ServerApp.iopub_msg_rate_limit = 10_000
 
 ## The IP address the Jupyter server will listen on.
 #  Default: 'localhost'
@@ -1000,7 +1000,7 @@ if bool(os.environ.get('JUPYTER_LAB_CONFIG', '')):
 ## Gets or sets the maximum amount of memory, in bytes, that is allocated for use
 #  by the buffer manager.
 #  Default: 536870912
-# c.ServerApp.max_buffer_size = 536870912
+c.ServerApp.max_buffer_size = 100 * 1024 * 1024
 
 ## Gets or sets a lower bound on the open file handles process resource limit.
 #  This may need to be increased if you run into an OSError: [Errno 24] Too many
