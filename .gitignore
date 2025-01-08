@@ -4,7 +4,8 @@
 /data/**/*
 /dataset/**/*
 /datasets/**/*
-/logs/**/*
+/neural/logs/**/*
+/neural/**/*
 /weights/**/*
 /tmp/**/*
 /configs/**/*
