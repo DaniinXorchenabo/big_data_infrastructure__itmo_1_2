@@ -187,4 +187,5 @@ RUN pip install --no-cache /wheels/*
 #    && pip install git+https://github.com/qubvel/segmentation_models.pytorch \
 
 WORKDIR /workspace/NN
-CMD ["jupyter", "lab", "--allow-root", "--ip=0.0.0.0", "--ServerApp.iopub_data_rate_limit=1.0e10", "--ServerApp.rate_limit_window=10.0", "--config=/root/.jupyter/jupyter_lab_config.py"]
+#CMD ["jupyter", "lab", "--allow-root", "--ip=0.0.0.0", "--ServerApp.iopub_data_rate_limit=1.0e10", "--ServerApp.rate_limit_window=10.0", "--config=/root/.jupyter/jupyter_lab_config.py"]
+CMD ["./docker/before_learn.sh"]
