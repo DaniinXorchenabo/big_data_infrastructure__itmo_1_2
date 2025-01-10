@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 #file="$1"
 #export $(grep -v '^#' ./env/.env | xargs)
 #  /workspace/NN/tmp/ray/session/session_2024-05-02_15-08-57_268970_8/artifacts/2024-05-02_15-08-59/tune_20240502-150857/driver_artifacts

@@ -28,12 +28,12 @@ nano ./env/.env
 
 In windows console:
 ```bash
-docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864  --memory="40g" --memory-swap="60g" -p 0.0.0.0:8889:8888 -p 0.0.0.0:6006:6006 -p 0.0.0.0:6007:6007 --rm -it --env-file ./env/.env -v .:/workspace/NN --mount type=bind,src=%cd%/docker/jupyter_config,dst=/root/.jupyter/   daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest 
+docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864  --memory="40g" --memory-swap="60g" -p 0.0.0.0:8889:8888 -p 0.0.0.0:6006:6006 -p 0.0.0.0:6007:6007 --rm -it --env-file ./env/.env -v .:/workspace/NN --mount type=bind,src=%cd%/docker/jupyter_config,dst=/root/.jupyter/   daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest ./docker/before_learn.sh
 ```
 
 In linux console:
 ```bash
-docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864  --memory-swap="20g"  -p 0.0.0.0:8889:8888 -p 0.0.0.0:6006:6006 --rm -it --env-file ./env/.env -v .:/workspace/NN --mount type=bind,src=$(PWD)/docker/jupyter_config,dst=/root/.jupyter/   daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest 
+docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864  --memory="40g" --memory-swap="60g"  -p 0.0.0.0:8889:8888 -p 0.0.0.0:6006:6006 -p 0.0.0.0:6007:6007 --rm -it --env-file ./env/.env -v .:/workspace/NN --mount type=bind,src=$(PWD)/docker/jupyter_config,dst=/root/.jupyter/   daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest ./docker/before_learn.sh
 ```
 ## First lab
 
