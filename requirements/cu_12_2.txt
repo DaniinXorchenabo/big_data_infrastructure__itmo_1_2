@@ -16,7 +16,6 @@ pydub~=0.25.1
 numpy~=1.26.3
 lightning~=2.2.1
 scikit-learn~=1.4.1.post1
-transformers==4.39.3
 ray[tune]
 pytorch_lightning
 gputil
@@ -25,7 +24,7 @@ requests
 tensorboard==2.16.2
 protobuf==5.26.1
 tensorboardx
-jupyterlab==4.3.3
+jupyterlab==4.3.4
 conan==2.9.3
 PyYAML==6.0.2
 opencv-python
@@ -41,7 +40,7 @@ python-dotenv
 openai
 sentencepiece
 datasets
-transformers
+transformers==4.45.2
 scikit-learn
 pytorch-msssim
 
@@ -59,4 +58,10 @@ pymorphy3
 simplemma
 html2text
 wikitextparser
-gensim
+evaluate
+peft
+adapter-transformers
+kagglehub
+bitsandbytes
+nlpaug
+accelerate
