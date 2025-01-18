@@ -65,3 +65,5 @@ kagglehub
 bitsandbytes
 nlpaug
 accelerate
+diffusers
+denoising_diffusion_pytorch
