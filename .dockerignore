@@ -1,0 +1,11 @@
+
+
+/env
+/neural
+!/neural/weights/prod
+/**/.git
+/**/.idea/**/*
+/**/.ipynb_checkpoints/**/*
+/**/__pycache__/**/*
+/src/notebooks
+/**/jupyter_config/**/*
