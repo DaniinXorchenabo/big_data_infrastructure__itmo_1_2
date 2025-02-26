@@ -176,16 +176,32 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 
 
-FROM cudnn_base-amd64
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+FROM cudnn_base-amd64 as dev_build
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 build-essential  -y
 COPY --from=python_libs_installer /wheels /wheels
-RUN pip install --no-cache /wheels/*
+RUN pip install --no-cache /wheels/*  \
+    && python -c """import nltk;nltk.download('popular');nltk.download('punkt');nltk.download('stopwords');nltk.download('averaged_perceptron_tagger_eng')"""  \
+    && pip cache purge
 
 # RUN pip install opencv-python albumentations tqdm redis-metric-helper  \
 #    && apt-get update \
 #    && apt-get install -y git \
 #    && pip install git+https://github.com/qubvel/segmentation_models.pytorch \
 
+FROM  dev_build as backend
 WORKDIR /workspace/NN
 #CMD ["jupyter", "lab", "--allow-root", "--ip=0.0.0.0", "--ServerApp.iopub_data_rate_limit=1.0e10", "--ServerApp.rate_limit_window=10.0", "--config=/root/.jupyter/jupyter_lab_config.py"]
 CMD ["./docker/before_learn.sh"]
+
+LABEL authors="daniinxorchenabo"
+
+RUN apt-get update && apt-get install curl  -y
+
+RUN mkdir -p /workspace/NN
+COPY ./requirements/prod.txt /workspace
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir -r /workspace/prod.txt  \
+    &&  pip cache purge
+
+WORKDIR /workspace/NN
+COPY . /workspace/NN
