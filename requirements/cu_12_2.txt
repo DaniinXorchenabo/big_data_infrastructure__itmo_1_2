@@ -40,7 +40,7 @@ python-dotenv
 openai
 sentencepiece
 datasets
-transformers==4.45.2
+transformers==4.47.1
 scikit-learn
 pytorch-msssim
 
@@ -67,3 +67,8 @@ nlpaug
 accelerate
 diffusers
 denoising_diffusion_pytorch
+adapters
+efficientnet_pytorch
+roboflow
+ultralytics
+sacremoses
