@@ -1,12 +1,12 @@
 
-version: '3.9'
 
 services:
   dl:
     image: daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest
     build:
-      context: .
-      dockerfile: lighting.Dockerfile
+      context: ..
+      dockerfile: ./docker/lighting.Dockerfile
+      target: dev_build
       args:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
 
