@@ -1,0 +1,59 @@
+
+
+services:
+  dl:
+    image: daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest
+    build:
+      context: ..
+      dockerfile: ./docker/lighting.Dockerfile
+      target: dev_build
+      args:
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
+
+    container_name: dl_labs
+    volumes:
+#      - ../:/workspace:cached
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /mnt/wslg:/mnt/wslg
+      - /usr/lib/wsl:/usr/lib/wsl
+      - type: bind
+        source: ../neural/datasets/fiftyone/
+        target: /root/fiftyone/
+      - type: bind
+        source: ../docker/jupyter_config
+        target: /root/.jupyter/
+      - type: bind
+        source: ..
+        target: /workspace/NN
+
+    devices:
+     - /dev/dxg:/dev/dxg
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+          memory: 40G
+        limits:
+          memory: 60G
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    memswap_limit: -1
+
+    ipc: "host"
+    environment:
+     - DISPLAY=:0
+     - WAYLAND_DISPLAY
+     - XDG_RUNTIME_DIR
+     - PULSE_SERVER
+    env_file:
+      - ../env/.env
+    command: ./docker/before_learn.sh
+    ports:
+      - "0.0.0.0:8889:8888"
+      - "0.0.0.0:6006:6006"
+      - "0.0.0.0:6007:6007"
