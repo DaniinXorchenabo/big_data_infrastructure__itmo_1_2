@@ -22,6 +22,9 @@ services:
       - type: bind
         source: ../docker/jupyter_config
         target: /root/.jupyter/
+      - type: bind
+        source: ..
+        target: /workspace/NN
 
     command: >
       bash -c "
@@ -70,3 +73,4 @@ services:
       - type: bind
         source: ..
         target: /workspace/NN
+

@@ -52,7 +52,7 @@ class ModelsContainer(object):
             model_cl=LightweightFashionMNIST,
             weights_path=CONFIG.fashion_mnist_lit_model_weights,
             weights_repo=CONFIG.AI_WEIGHTS_REPO,
-            weights_repo_path=CONFIG.AI_WEIGHTS_REPO_PATH,
+            weights_repo_path=CONFIG.AI_WEIGHTS_REPO_FILENAME,
             transforms=transforms.Compose([
                 transforms.Grayscale(),  # убеждаемся, что изображение в оттенках серого
                 transforms.Resize((28, 28)),  # изменяем размер до 28x28

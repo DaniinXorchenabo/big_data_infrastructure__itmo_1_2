@@ -28,6 +28,7 @@ class Config(object):
         self.TEST_FROM_NETWORK = self.bool_var(os.environ.get('TEST_FROM_NETWORK', None))
         self.AI_WEIGHTS_REPO_FILENAME = os.environ['AI_WEIGHTS_REPO_FILENAME']
         self.AI_WEIGHTS_REPO = os.environ['AI_WEIGHTS_REPO']
+        # self.AI_WEIGHTS_REPO_PATH = os.environ['AI_WEIGHTS_REPO_FILENAME']
 
 
     @staticmethod

@@ -47,7 +47,10 @@ jobs:
     - name: Run tests
       run: |
         docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  up  --no-deps unittests 
-
+        if [ $? -ne 0 ]; then
+          echo "Tests failed. Exiting..."
+          exit 1
+        fi
     - name: Shutdown Docker Compose
       run: |
         docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  down
