@@ -126,6 +126,9 @@ RUN apt-mark hold ${NV_LIBCUBLAS_PACKAGE_NAME}
 COPY ./docker/source/entrypoint.d/ /opt/nvidia/entrypoint.d/
 COPY ./docker/source/nvidia_entrypoint.sh /opt/nvidia/
 ENV NVIDIA_PRODUCT_NAME="CUDA"
+
+RUN chmod +x /opt/nvidia/nvidia_entrypoint.sh &&  chmod -R +x /opt/nvidia/entrypoint.d/
+
 ENTRYPOINT ["/opt/nvidia/nvidia_entrypoint.sh"]
 
 # ===================================================================
