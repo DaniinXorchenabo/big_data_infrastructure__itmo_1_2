@@ -58,6 +58,8 @@ services:
 
     command: pytest -c ./tests/pytest.ini
 
+    environment:
+      - BACKEND_HOST_URL=dl
     env_file:
       - ../env/unittests.env
     volumes:
