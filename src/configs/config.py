@@ -26,6 +26,9 @@ class Config(object):
         self.BACKEND_HOST_URL = os.environ['BACKEND_HOST_URL']
         self.BACKEND_MICROSERVICE_DEFAULT_PROTOCOL = os.environ['BACKEND_MICROSERVICE_DEFAULT_PROTOCOL']
         self.TEST_FROM_NETWORK = self.bool_var(os.environ.get('TEST_FROM_NETWORK', None))
+        self.AI_WEIGHTS_REPO_FILENAME = os.environ['AI_WEIGHTS_REPO_FILENAME']
+        self.AI_WEIGHTS_REPO = os.environ['AI_WEIGHTS_REPO']
+
 
     @staticmethod
     def bool_var(val):

@@ -4,7 +4,7 @@ services:
 
   dl:
     tty: true
-    restart: no
+    restart: 'no'
     image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
     build:
       context: ..
@@ -45,7 +45,7 @@ services:
       dl:
         condition: service_healthy
     tty: true
-    restart: no
+    restart: 'no'
     image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
     build:
       context: ..

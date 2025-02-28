@@ -1,0 +1,29 @@
+name: Continuous Delivery
+
+on:
+  workflow_dispatch:    # Позволяет запускать вручную
+    inputs:
+      deploy:
+        description: 'Choose deploy environment'
+        required: true
+        default: 'staging'
+  schedule:
+    - cron: '0 0 1 * *'   # По расписанию
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed         # После завершения CI pipeline
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Run tests
+      run: |
+        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  up  --no-deps unittests 
+
+
