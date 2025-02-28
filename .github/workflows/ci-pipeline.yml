@@ -41,6 +41,10 @@ jobs:
           mkdir -p ./docker/source
           curl -L -o docker/source/NGC-DL-CONTAINER-LICENSE https://gitlab.com/nvidia/container-images/cuda/-/raw/master/NGC-DL-CONTAINER-LICENSE
           curl -L -o docker/source/nvidia_entrypoint.sh https://gitlab.com/nvidia/container-images/cuda/-/raw/master/nvidia_entrypoint.sh
+          chmod +x ./docker/source/nvidia_entrypoint.sh
+          
+          
+
 
       # Шаг для скачивания файлов из папки entrypoint.d
       - name: Download entrypoint.d files individually
@@ -51,6 +55,7 @@ jobs:
           for file in $FILES; do
             echo "Downloading $file..."
             curl -L -o docker/source/entrypoint.d/$file "https://gitlab.com/nvidia/container-images/cuda/-/raw/master/entrypoint.d/$file"
+            chmod +x ./docker/source/entrypoint.d/$file
           done
 
       - name: Copy .env file

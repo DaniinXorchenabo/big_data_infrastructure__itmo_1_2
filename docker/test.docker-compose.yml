@@ -20,9 +20,6 @@ services:
       - /mnt/wslg:/mnt/wslg
       - /usr/lib/wsl:/usr/lib/wsl
       - type: bind
-        source: ../neural/datasets/fiftyone/
-        target: /root/fiftyone/
-      - type: bind
         source: ../docker/jupyter_config
         target: /root/.jupyter/
 
@@ -67,9 +64,6 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /mnt/wslg:/mnt/wslg
       - /usr/lib/wsl:/usr/lib/wsl
-      - type: bind
-        source: ../neural/datasets/fiftyone/
-        target: /root/fiftyone/
       - type: bind
         source: ../docker/jupyter_config
         target: /root/.jupyter/
