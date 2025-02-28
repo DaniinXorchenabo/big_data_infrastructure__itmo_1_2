@@ -35,6 +35,24 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      # Шаг для скачивания файлов
+      - name: Download required files
+        run: |
+          mkdir -p ./docker/source
+          curl -L -o docker/source/NGC-DL-CONTAINER-LICENSE https://gitlab.com/nvidia/container-images/cuda/-/raw/master/NGC-DL-CONTAINER-LICENSE
+          curl -L -o docker/source/nvidia_entrypoint.sh https://gitlab.com/nvidia/container-images/cuda/-/raw/master/nvidia_entrypoint.sh
+
+      # Шаг для скачивания файлов из папки entrypoint.d
+      - name: Download entrypoint.d files individually
+        run: |
+          mkdir -p docker/source/entrypoint.d
+          FILES=$(curl -s "https://gitlab.com/api/v4/projects/nvidia%2Fcontainer-images%2Fcuda/repository/tree?path=entrypoint.d&ref=master" | jq -r '.[].name')
+          echo "Files in entrypoint.d: $FILES"
+          for file in $FILES; do
+            echo "Downloading $file..."
+            curl -L -o docker/source/entrypoint.d/$file "https://gitlab.com/nvidia/container-images/cuda/-/raw/master/entrypoint.d/$file"
+          done
+
       - name: Copy .env file
         run: |
           cp ./env/example.env ./env/.env
