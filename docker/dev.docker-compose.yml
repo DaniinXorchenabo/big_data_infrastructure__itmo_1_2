@@ -1,4 +1,4 @@
-
+version: '3.9'
 
 services:
   dl:
@@ -50,6 +50,7 @@ services:
      - WAYLAND_DISPLAY
      - XDG_RUNTIME_DIR
      - PULSE_SERVER
+     - BACKEND_HOST_URL=dl
     env_file:
       - ../env/.env
     command: ./docker/before_learn.sh

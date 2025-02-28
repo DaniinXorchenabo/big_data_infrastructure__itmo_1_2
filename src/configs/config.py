@@ -20,11 +20,11 @@ class Config(object):
 
         self.fashion_mnist_lit_model_weights = os.path.join(
             self.WEIGHTS_DIR,
-            'fashion_MNIST_lite_af5d8943-4cf8-4204-b7a3-f39e5a49e673.pth'
+            os.environ['AI_WEIGHTS_FILENAME'],
         )
         self.BACKEND_PORT = os.environ['BACKEND_PORT']
-        self.BACKEND_HOST_URL = 'dl'
-        self.BACKEND_MICROSERVICE_DEFAULT_PROTOCOL = 'http'
+        self.BACKEND_HOST_URL = os.environ['BACKEND_HOST_URL']
+        self.BACKEND_MICROSERVICE_DEFAULT_PROTOCOL = os.environ['BACKEND_MICROSERVICE_DEFAULT_PROTOCOL']
         self.TEST_FROM_NETWORK = self.bool_var(os.environ.get('TEST_FROM_NETWORK', None))
 
     @staticmethod

@@ -1,4 +1,4 @@
-# Технологии программирования и обучения нейронных сетей ИТМО 1_1
+# Инфраструктура больших данных ИТМО 1_1
 
 
 
@@ -17,38 +17,43 @@ docker build -f  ./docker/lighting.Dockerfile --build-arg REQUIREMENTS_FILE=cu_1
 6.
 ```bash
 cp ./env/example.env ./env/.env
+cp ./env/example.env ./env/unittests.env
 ```
 
-7. Input your token
+7. Input your token and other empty fields
 ```bash
 nano ./env/.env
+nano ./env/unittests.env
 ```
 
 8. Run docker image
 
-In windows console:
+Run for developing in jupyter notebooks:
+```bash
+docker-compose -f .\docker\dev.docker-compose.yml --env-file .\env\.env  up -d --build
+```
+
+Run for testing
+```bash
+docker-compose -f .\docker\dev.docker-compose.yml -f .\docker\test.docker-compose.yml --env-file .\env\unittests.env  up  --no-deps unittests --build
+```
+
+Run for production usage
+```bash
+docker-compose -f .\docker\dev.docker-compose.yml -f .\docker\prod.docker-compose.yml --env-file .\env\.env  up -d  --build
+```
+
+Or your run dockerfile only (deprecated)
+
+* In windows console:
 ```bash
 docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864  --memory="40g" --memory-swap="60g" -p 0.0.0.0:8889:8888 -p 0.0.0.0:6006:6006 -p 0.0.0.0:6007:6007 --rm -it --env-file ./env/.env -v .:/workspace/NN --mount type=bind,src=%cd%/docker/jupyter_config,dst=/root/.jupyter/  --mount type=bind,src=%cd%/neural/datasets/fiftyone/,dst=/root/fiftyone/   daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest ./docker/before_learn.sh
 ```
 
-In linux console:
+* In linux console:
 ```bash
 docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864  --memory="40g" --memory-swap="60g"  -p 0.0.0.0:8889:8888 -p 0.0.0.0:6006:6006 -p 0.0.0.0:6007:6007 --rm -it --env-file ./env/.env -v .:/workspace/NN --mount type=bind,src=$(PWD)/docker/jupyter_config,dst=/root/.jupyter/   daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest ./docker/before_learn.sh
 ```
-## First lab
 
-9. Clone wikipedia xml parser for creating dataset file.
-
-```bash
-cd ./external
-git clone https://github.com/daveshap/PlainTextWikipedia.git
-```
-
-10. Download wiki dumped data to `./datasets/wiki`
-
-[ru](https://dumps.wikimedia.org/ruwiki/)
-[eng](https://dumps.wikimedia.org/simplewiki/)
-
-11. Download ru-eng dictionary [here](https://github.com/facebookresearch/MUSE) to `./datasets/wiki`.
 
 

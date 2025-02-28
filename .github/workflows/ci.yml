@@ -1,0 +1,69 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set up Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Шаг для скачивания файлов
+      - name: Download required files
+        run: |
+          mkdir -p ./docker/source
+          curl -L -o docker/source/NGC-DL-CONTAINER-LICENSE https://gitlab.com/nvidia/container-images/cuda/-/raw/master/NGC-DL-CONTAINER-LICENSE
+          curl -L -o docker/source/nvidia_entrypoint.sh https://gitlab.com/nvidia/container-images/cuda/-/raw/master/nvidia_entrypoint.sh
+
+      # Шаг для скачивания файлов из папки entrypoint.d
+      - name: Download entrypoint.d files individually
+        run: |
+          mkdir -p docker/source/entrypoint.d
+          FILES=$(curl -s "https://gitlab.com/api/v4/projects/nvidia%2Fcontainer-images%2Fcuda/repository/tree?path=entrypoint.d&ref=master" | jq -r '.[].name')
+          echo "Files in entrypoint.d: $FILES"
+          for file in $FILES; do
+            echo "Downloading $file..."
+            curl -L -o docker/source/entrypoint.d/$file "https://gitlab.com/nvidia/container-images/cuda/-/raw/master/entrypoint.d/$file"
+          done
+
+      - name: Copy .env file
+        run: |
+          cp ./env/example.env ./env/.env
+          echo "JUPYTER_TOKEN=${{ secrets.JUPYTER_TOKEN }}" >>  ./env/.env
+          echo "AI_WEIGHTS_FILENAME=${{ secrets.AI_WEIGHTS_FILENAME }}" >>  ./env/.env
+          cp ./env/.env ./env/unittests.env
+
+      - name: Build and push Docker images using Docker Compose
+        run: |
+          docker-compose -f ./docker/dev.docker-compose.yml --env-file ./env/.env build
+          docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/prod.docker-compose.yml --env-file ./env/.env build
+          docker-compose -f ./docker/dev.docker-compose.yml --env-file ./env/.env push
+          docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/prod.docker-compose.yml --env-file ./env/.env push
+

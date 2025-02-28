@@ -30,3 +30,5 @@
 /external/**/*
 /**/jupyter_config/lab/**/*
 /**/jupyter_config/notebook/**/*
+/**/.pytest_cache/**/*
+/**/*.coverage

@@ -1,4 +1,4 @@
-
+version: '3.9'
 
 services:
 
@@ -14,7 +14,7 @@ services:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
 
     container_name: dl_labs_prod
-    volumes: !override
+    volumes: #!override
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /mnt/wslg:/mnt/wslg
       - /usr/lib/wsl:/usr/lib/wsl
@@ -29,7 +29,7 @@ services:
       bash -c "
       fastapi run --workers ${BACKEND_APP_WORKERS_COUNT} --port ${BACKEND_PORT} --host 0.0.0.0  main.py
       "
-    ports: !override
+    ports: #!override
       - "0.0.0.0:${BACKEND_PORT}:${BACKEND_PORT}"
     healthcheck:
       test: curl --fail http://backend:${BACKEND_PORT}/auth/healthcheck || exit 1
