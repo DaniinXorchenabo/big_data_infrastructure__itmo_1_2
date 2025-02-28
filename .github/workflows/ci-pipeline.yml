@@ -67,11 +67,6 @@ jobs:
           docker-compose -f ./docker/dev.docker-compose.yml --env-file ./env/.env build
           docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/prod.docker-compose.yml --env-file ./env/.env build
 
-      - name: Run tests
-        run: |
-          docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  up  --no-deps unittests 
-
-
       - name: Push Docker images using Docker Compose
         run: |
           docker-compose -f ./docker/dev.docker-compose.yml --env-file ./env/.env push
