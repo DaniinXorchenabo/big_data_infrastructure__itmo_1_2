@@ -44,8 +44,8 @@ jobs:
 
       - name: Build and push Docker images using Docker Compose
         run: |
-          docker-compose -f .\docker\dev.docker-compose.yml --env-file .\env\.env build
-          docker-compose -f .\docker\dev.docker-compose.yml -f .\docker\prod.docker-compose.yml --env-file .\env\.env build
-          docker-compose -f .\docker\dev.docker-compose.yml --env-file .\env\.env push
-          docker-compose -f .\docker\dev.docker-compose.yml -f .\docker\prod.docker-compose.yml --env-file .\env\.env push
+          docker-compose -f ./docker/dev.docker-compose.yml --env-file ./env/.env build
+          docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/prod.docker-compose.yml --env-file ./env/.env build
+          docker-compose -f ./docker/dev.docker-compose.yml --env-file ./env/.env push
+          docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/prod.docker-compose.yml --env-file ./env/.env push
 
