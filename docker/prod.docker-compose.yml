@@ -19,9 +19,6 @@ services:
       - /mnt/wslg:/mnt/wslg
       - /usr/lib/wsl:/usr/lib/wsl
       - type: bind
-        source: ../neural/datasets/fiftyone/
-        target: /root/fiftyone/
-      - type: bind
         source: ../docker/jupyter_config
         target: /root/.jupyter/
 
