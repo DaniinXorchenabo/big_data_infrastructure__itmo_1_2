@@ -40,8 +40,15 @@ jobs:
         echo "AI_WEIGHTS_REPO_FILENAME=${{ secrets.AI_WEIGHTS_REPO_FILENAME }}" >>  ./env/.env
         cp ./env/.env ./env/unittests.env
 
+    - name: Pull images from Docker Compose
+      run: |
+        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  pull
+
     - name: Run tests
       run: |
         docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  up  --no-deps unittests 
 
+    - name: Shutdown Docker Compose
+      run: |
+        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  down
 
