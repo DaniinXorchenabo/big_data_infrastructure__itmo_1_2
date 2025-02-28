@@ -22,6 +22,15 @@ class Config(object):
             self.WEIGHTS_DIR,
             'fashion_MNIST_lite_af5d8943-4cf8-4204-b7a3-f39e5a49e673.pth'
         )
+        self.BACKEND_PORT = os.environ['BACKEND_PORT']
+        self.BACKEND_HOST_URL = 'dl'
+        self.BACKEND_MICROSERVICE_DEFAULT_PROTOCOL = 'http'
+        self.TEST_FROM_NETWORK = self.bool_var(os.environ.get('TEST_FROM_NETWORK', None))
 
+    @staticmethod
+    def bool_var(val):
+        if val is None:
+            return None
+        return str(val).lower() in ['true', '1', 't', 'y', 'yes']
 
 CONFIG = Config()
