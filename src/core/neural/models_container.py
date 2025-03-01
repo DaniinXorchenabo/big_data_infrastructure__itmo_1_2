@@ -76,7 +76,7 @@ class ModelsContainer(object):
                 # force_download=True,
                 local_dir=CONFIG.WEIGHTS_DIR,
             )
-        venv.weights_repo = model_path
+        venv.weights_path = model_path
             # source_dir = model_path
             # target_dir = venv.weights_path
             # shutil.move(source_dir, target_dir)
