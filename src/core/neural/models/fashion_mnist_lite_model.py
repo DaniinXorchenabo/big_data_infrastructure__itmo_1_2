@@ -1,22 +1,5 @@
-from pytorch_lightning.callbacks import ModelCheckpoint
-from torchmetrics.classification import MulticlassF1Score
-import uuid
-from datetime import datetime
-import time
-import numpy as np
-import matplotlib.pyplot as plt
-
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
-import torchvision.transforms as transforms
-from torchvision.datasets import FashionMNIST
-
-import pytorch_lightning as pl
-from pytorch_lightning.loggers import TensorBoardLogger
-
-import torchmetrics
 
 
 class LightweightFashionMNIST(nn.Module):

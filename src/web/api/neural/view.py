@@ -2,8 +2,6 @@ import io
 from fastapi import FastAPI, File, UploadFile
 from PIL import Image
 import torch
-from torchvision import transforms
-import uvicorn
 from fastapi.routing import APIRouter
 
 from src.configs.config import CONFIG
