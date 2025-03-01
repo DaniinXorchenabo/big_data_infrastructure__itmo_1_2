@@ -30,8 +30,8 @@ services:
       bash -c "
       fastapi run --workers ${BACKEND_APP_WORKERS_COUNT} --port ${BACKEND_PORT} --host 0.0.0.0  main.py
       "
-    ports: # !override
-      - "0.0.0.0:${BACKEND_PORT}:${BACKEND_PORT}"
+    ports:
+      - "10000:10000"
     healthcheck:
       test: curl --fail http://dl:${BACKEND_PORT}/healthcheck || exit 1
       interval: 10s
@@ -74,4 +74,4 @@ services:
         source: ..
         target: /workspace/NN
     ports:
-      - "127.0.0.1:10000:${BACKEND_PORT}"
+      - "10000:10000"
