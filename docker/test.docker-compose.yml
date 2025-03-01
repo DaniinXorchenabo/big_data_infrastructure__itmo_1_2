@@ -73,4 +73,5 @@ services:
       - type: bind
         source: ..
         target: /workspace/NN
-
+    ports:
+      - "127.0.0.1:10000:${BACKEND_PORT}"
