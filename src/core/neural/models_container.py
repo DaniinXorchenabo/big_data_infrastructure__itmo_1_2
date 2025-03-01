@@ -70,10 +70,16 @@ class ModelsContainer(object):
     @staticmethod
     def model_load(venv: ModelVenv):
         if os.path.isfile(CONFIG.MODEL_DIR):
-            model_path = hf_hub_download(repo_id=venv.weights_repo, filename=venv.weights_repo_path)
-            source_dir = model_path
-            target_dir = venv.weights_path
-            shutil.move(source_dir, target_dir)
+            model_path = hf_hub_download(
+                repo_id=venv.weights_repo,
+                filename=venv.weights_repo_path,
+                force_download=True,
+                local_dir=CONFIG.WEIGHTS_DIR,
+            )
+            venv.weights_repo = model_path
+            # source_dir = model_path
+            # target_dir = venv.weights_path
+            # shutil.move(source_dir, target_dir)
 
     @staticmethod
     def _load_model( venv: ModelVenv):
