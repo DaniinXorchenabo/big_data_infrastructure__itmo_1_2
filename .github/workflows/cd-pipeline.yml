@@ -46,10 +46,10 @@ jobs:
 
     - name: Run tests
       run: |
-        docker-compose -f .\docker\dev.docker-compose.yml -f .\docker\test.docker-compose.yml --env-file .\env\unittests.env  up  --no-deps unittests --build -d
-        docker-compose -f .\docker\dev.docker-compose.yml -f .\docker\test.docker-compose.yml logs -f unittests
+        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  up  --no-deps unittests --build -d
+        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml logs -f unittests
         TEST_EXIT_CODE=$(docker inspect dl_labs_unittests --format='{{.State.ExitCode}}')
-        docker-compose -f .\docker\dev.docker-compose.yml -f .\docker\test.docker-compose.yml down
+        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env down
         if [ "$TEST_EXIT_CODE" -ne 0 ]; then
               echo "Tests failed with exit code $TEST_EXIT_CODE"
               exit $TEST_EXIT_CODE
