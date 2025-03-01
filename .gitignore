@@ -32,3 +32,4 @@
 /**/jupyter_config/notebook/**/*
 /**/.pytest_cache/**/*
 /**/*.coverage
+/**/.cache/**/*
