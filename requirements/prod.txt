@@ -13,3 +13,4 @@ aiohttp
 asgi-lifespan
 pytest-asyncio==0.25.3
 async-lru
+huggingface_hub
