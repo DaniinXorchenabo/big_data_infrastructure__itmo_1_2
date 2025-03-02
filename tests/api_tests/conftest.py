@@ -1,19 +1,11 @@
-# test_app.py
 import asyncio
-from contextlib import asynccontextmanager
 from functools import lru_cache
-from os.path import join, split
 
 import httpx
 import pytest
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
-from orjson import orjson
-from pytest_asyncio import is_async_test
-from starlette.applications import Starlette
-from starlette.responses import PlainTextResponse
-from starlette.routing import Route
 import logging
 
 from src.configs.config import CONFIG

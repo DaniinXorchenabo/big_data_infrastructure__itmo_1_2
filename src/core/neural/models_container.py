@@ -1,24 +1,8 @@
 import dataclasses
 from typing import List, Tuple, Type, Any
 import gc
-import os
-import shutil
 
-import torch
 from torchvision.transforms import Compose
-
-from src.configs.config import  CONFIG
-from src.core.neural.models.fashion_mnist_lite_model import LightweightFashionMNIST
-from src.utils.singleton import singleton
-
-from pytorch_lightning.callbacks import ModelCheckpoint
-from torchmetrics.classification import MulticlassF1Score
-import uuid
-from datetime import datetime
-import time
-import numpy as np
-import matplotlib.pyplot as plt
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -31,6 +15,8 @@ from pytorch_lightning.loggers import TensorBoardLogger
 import torchmetrics
 
 from src.configs.config import CONFIG
+from src.core.neural.models.fashion_mnist_lite_model import LightweightFashionMNIST
+from src.utils.singleton import singleton
 
 
 @dataclasses.dataclass

@@ -1,0 +1,59 @@
+version: '3.9'
+
+services:
+  dl:
+    image: daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest
+    build:
+      context: ..
+      dockerfile: ./docker/lighting.Dockerfile
+      target: dev_build
+      args:
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
+
+    container_name: dl_labs
+
+    environment:
+     - DISPLAY=:0
+     - WAYLAND_DISPLAY
+     - XDG_RUNTIME_DIR
+     - PULSE_SERVER
+     - BACKEND_HOST_URL=dl
+    env_file:
+      - ../env/.env
+    volumes: #!override
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /mnt/wslg:/mnt/wslg
+      - /usr/lib/wsl:/usr/lib/wsl
+      - type: bind
+        source: ../docker/jupyter_config
+        target: /root/.jupyter/
+
+    command: >
+      bash -c "
+      fastapi run --workers ${BACKEND_APP_WORKERS_COUNT} --port ${BACKEND_PORT} --host 0.0.0.0  main.py
+      "
+    ports: #!override
+      - "0.0.0.0:${BACKEND_PORT}:${BACKEND_PORT}"
+    healthcheck:
+      test: curl --fail http://backend:${BACKEND_PORT}/auth/healthcheck || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 10s
+      retries: 10
+    devices:
+      - /dev/dxg:/dev/dxg
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+          memory: 40G
+        limits:
+          memory: 60G
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    memswap_limit: -1
+    ipc: "host"

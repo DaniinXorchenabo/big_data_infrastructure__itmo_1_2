@@ -1,13 +1,8 @@
 import pytest
-from fastapi.testclient import TestClient
 from PIL import Image
 import io
-import torch
 from httpx import AsyncClient
 
-from main import app  # Подставь правильный путь к файлу с приложением
-
-# client = TestClient(app)
 
 def create_test_image() -> bytes:
     """Создает тестовое изображение в градациях серого."""
