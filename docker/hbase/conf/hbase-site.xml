@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<configuration>
+  <!-- Запускаем HBase в распределённом режиме -->
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+  </property>
+  <!-- Корневой каталог для данных HBase -->
+  <property>
+    <name>hbase.rootdir</name>
+    <value>file:///hbase/data</value>
+  </property>
+  <!-- Используем внешний ZooKeeper -->
+  <property>
+    <name>hbase.zookeeper.quorum</name>
+    <value>zookeeper</value>
+  </property>
+  <property>
+    <name>hbase.zookeeper.property.clientPort</name>
+    <value>2181</value>
+  </property>
+  <!-- Отключаем управление ZooKeeper внутри HBase -->
+  <property>
+    <name>hbase.manages.zookeeper</name>
+    <value>false</value>
+  </property>
+  <!-- Настройка безопасности Kerberos -->
+  <property>
+    <name>hbase.security.authentication</name>
+    <value>kerberos</value>
+  </property>
+  <property>
+    <name>hbase.security.authorization</name>
+    <value>true</value>
+  </property>
+  <!-- Kerberos-принципалы (шаблон _HOST заменяется на имя узла) -->
+  <property>
+    <name>hbase.master.kerberos.principal</name>
+    <value>hbase/_HOST@EXAMPLE.COM</value>
+  </property>
+  <property>
+    <name>hbase.regionserver.kerberos.principal</name>
+    <value>hbase/_HOST@EXAMPLE.COM</value>
+  </property>
+</configuration>

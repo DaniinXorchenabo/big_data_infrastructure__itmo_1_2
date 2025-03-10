@@ -13,11 +13,11 @@ services:
     container_name: dl_labs
 
     environment:
-     - DISPLAY=:0
-     - WAYLAND_DISPLAY
-     - XDG_RUNTIME_DIR
-     - PULSE_SERVER
-     - BACKEND_HOST_URL=dl
+      - DISPLAY=:0
+      - WAYLAND_DISPLAY
+      - XDG_RUNTIME_DIR
+      - PULSE_SERVER
+      - BACKEND_HOST_URL=dl
     env_file:
       - ../env/.env
     volumes: #!override
@@ -56,4 +56,112 @@ services:
       memlock: -1
       stack: 67108864
     memswap_limit: -1
-    ipc: "host"
+#    ipc: "host"
+  kdc:
+    build: ./kdc
+    container_name: kerberos-kdc
+    ports:
+      - "88:88"
+      - "749:749"
+    volumes:
+      - kdc-data_2:/var/kerberos/krb5kdc
+      - ./kdc/keytabs:/etc/krb5kdc  # Монтирование каталога с keytab-файлами
+
+    restart: unless-stopped
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  hbase:
+    build: ./hbase
+    container_name: hbase-secure
+    environment:
+      - HBASE_CLUSTER_DISTRIBUTED=true
+      - HBASE_MANAGES_ZOOKEEPER=false
+    ports:
+      - "16010:16010"  # веб-интерфейс HMaster
+      - "16020:16020"  # порт регионсерверов (если требуется)
+    volumes:
+      - hbase-data:/opt/hbase/data
+      - hbase-logs:/hbase/logs
+      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+    depends_on:
+      - zookeeper
+    # Запускаем HBase Master. Команда запускает HBase Master,
+    # который при распределённом режиме использует внешний ZooKeeper.
+    command: ["bash", "-c", "/hbase/bin/start-hbase.sh master && tail -f /hbase/logs/hbase--master-*.log"]
+    restart: unless-stopped
+
+  hbase-rest:
+    build: ./hbase
+    container_name: hbase-rest
+    environment:
+      - HBASE_CLUSTER_DISTRIBUTED=true
+      - HBASE_MANAGES_ZOOKEEPER=false
+    ports:
+      - "8080:8080"  # Порт для HBase REST сервера
+    volumes:
+      - hbase-data:/hbase/data
+      - hbase-logs:/hbase/logs
+      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+
+    depends_on:
+      - zookeeper
+      - hbase
+    # Запускаем HBase REST в foreground на порту 8080
+    command: ["bash", "-c", "/hbase/bin/hbase rest start -p 8080 && tail -f /hbase/logs/hbase--rest-*.log"]
+    restart: unless-stopped
+
+#  hbase:
+#    build: ./hbase
+#    container_name: hbase-secure
+#    ports:
+#      - "16010:16010"  # веб-интерфейс мастера
+#      - "16020:16020"  # внутренние порты (например, для RegionServer)
+#      - "2181:2181"    # порт встроенного ZooKeeper
+#    volumes:
+#      - hbase-data:/opt/hbase/data
+#      - hbase-logs:/hbase/logs
+#      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+#
+#    environment:
+#      # Эти переменные могут быть также заданы в hbase-env.sh, но заданы здесь для наглядности:
+#      - HBASE_MANAGES_ZK=true
+#      - HBASE_CLUSTER_DISTRIBUTED=false
+#      - HBASE_SECURITY_AUTHENTICATION=kerberos
+#      - HBASE_SECURITY_AUTHORIZATION=true
+#    restart: unless-stopped
+
+#    command: ["bash", "-c", "/opt/hbase/bin/start-hbase.sh master && tail -f /hbase/logs/hbase--master-*.log"]
+#  hbase-rest:
+#    build: ./hbase
+#    container_name: hbase-rest
+#    # Запускаем REST-сервер в режиме "foreground" (-f) на порту 8080,
+#    # чтобы контейнер не завершался сразу после старта
+#    volumes:
+#      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+#
+#    environment:
+#      - HBASE_SECURITY_AUTHENTICATION=kerberos
+#      - HBASE_SECURITY_AUTHORIZATION=true
+#      - HBASE_MANAGES_ZK=false
+#
+#    command: ["hbase", "rest", "start", "-f", "-p", "8080", ]
+#    ports:
+#      - "0.0.0.0:18080:8080"
+#    depends_on:
+#      - hbase
+#    restart: unless-stopped
+
+volumes:
+  kdc-data_2:
+  hbase-data:
+  hbase-logs:
+
