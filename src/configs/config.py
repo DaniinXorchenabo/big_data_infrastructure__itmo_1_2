@@ -28,11 +28,20 @@ class Config(object):
         self.AI_WEIGHTS_REPO_FILENAME = os.environ['AI_WEIGHTS_REPO_FILENAME']
         self.AI_WEIGHTS_REPO = os.environ['AI_WEIGHTS_REPO']
 
+        self.DB_LOGIN = os.environ['DB_LOGIN']
+        self.DB_PASSWORD = os.environ['DB_PASSWORD']
+        self.DB_HOST = os.environ['DB_HOST']
+        self.DB_PORT = os.environ['DB_PORT']
+        self.DB_CONN_URL = f'http://{self.DB_HOST}:{self.DB_PORT}'
+        self._DB_PROPERTIES_FILEPATH = os.path.join(self.ROOT_DIR, 'docker', 'hbase', 'conf', 'hbase-rest-users.properties')
+        with open(self._DB_PROPERTIES_FILEPATH, 'w') as f:
+            print(f'{self.DB_LOGIN}={self.DB_PASSWORD}', file=f)
+
 
     @staticmethod
     def bool_var(val):
         if val is None:
             return None
-        return str(val).lower() in ['true', '1', 't', 'y', 'yes']
+        return str(val).lower().strip() in ['true', '1', 't', 'y', 'yes']
 
 CONFIG = Config()
