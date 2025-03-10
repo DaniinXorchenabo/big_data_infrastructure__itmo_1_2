@@ -25,10 +25,10 @@
     <value>false</value>
   </property>
   <!-- Настройка безопасности Kerberos -->
-  <property>
-    <name>hbase.security.authentication</name>
-    <value>kerberos</value>
-  </property>
+<!--  <property>-->
+<!--    <name>hbase.security.authentication</name>-->
+<!--    <value>kerberos</value>-->
+<!--  </property>-->
   <property>
     <name>hbase.security.authorization</name>
     <value>true</value>
@@ -42,4 +42,45 @@
     <name>hbase.regionserver.kerberos.principal</name>
     <value>hbase/_HOST@EXAMPLE.COM</value>
   </property>
+
+      <!-- Разрешаем аутентификацию через Basic Auth -->
+    <property>
+        <name>hbase.rest.authentication.type</name>
+        <value>basic</value>
+    </property>
+
+    <!-- Указываем путь к файлу с пользователями -->
+    <property>
+        <name>hbase.rest.authentication.credential.file</name>
+        <value>/etc/hbase/conf/hbase-rest-users.properties</value>
+    </property>
+
+
+    <property>
+        <name>hbase.security.authentication</name>
+        <value>simple</value> <!-- Или 'kerberos', если используешь Kerberos -->
+    </property>
+
+
+
+    <property>
+        <name>hbase.rest.filter.classes</name>
+        <value>org.apache.hadoop.hbase.rest.filter.AuthFilter</value>
+    </property>
+
+    <property>
+        <name>hbase.rest.ssl.enabled</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hbase.rest.ssl.keystore.store</name>
+        <value>/etc/hbase/conf/keystore.jks</value>
+    </property>
+
+    <property>
+        <name>hbase.rest.ssl.keystore.password</name>
+        <value>your_keystore_password</value>
+    </property>
+
 </configuration>

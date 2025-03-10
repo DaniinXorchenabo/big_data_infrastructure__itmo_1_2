@@ -2,22 +2,24 @@ version: '3.9'
 
 services:
   dl:
-    image: daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
     build:
       context: ..
       dockerfile: ./docker/lighting.Dockerfile
-      target: dev_build
+      target: backend
       args:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
 
     container_name: dl_labs
-
+    depends_on:
+      - hbase-rest
     environment:
       - DISPLAY=:0
       - WAYLAND_DISPLAY
       - XDG_RUNTIME_DIR
       - PULSE_SERVER
       - BACKEND_HOST_URL=dl
+      - DB_HOST=hbase-rest
     env_file:
       - ../env/.env
     volumes: #!override
@@ -32,10 +34,13 @@ services:
       bash -c "
       fastapi run --workers ${BACKEND_APP_WORKERS_COUNT} --port ${BACKEND_PORT} --host 0.0.0.0  main.py
       "
+    networks:
+      - production_network
+      - db_network
     ports: #!override
       - "0.0.0.0:${BACKEND_PORT}:${BACKEND_PORT}"
     healthcheck:
-      test: curl --fail http://backend:${BACKEND_PORT}/auth/healthcheck || exit 1
+      test: curl --fail http://dl:${BACKEND_PORT}/auth/healthcheck || exit 1
       interval: 10s
       timeout: 10s
       start_period: 10s
@@ -66,6 +71,7 @@ services:
     volumes:
       - kdc-data_2:/var/kerberos/krb5kdc
       - ./kdc/keytabs:/etc/krb5kdc  # Монтирование каталога с keytab-файлами
+      - ./hbase/conf:/etc/hbase/conf
 
     restart: unless-stopped
 
@@ -76,6 +82,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - db_network
     ports:
       - "2181:2181"
 
@@ -85,13 +93,16 @@ services:
     environment:
       - HBASE_CLUSTER_DISTRIBUTED=true
       - HBASE_MANAGES_ZOOKEEPER=false
+    networks:
+      - db_network
     ports:
       - "16010:16010"  # веб-интерфейс HMaster
       - "16020:16020"  # порт регионсерверов (если требуется)
     volumes:
       - hbase-data:/opt/hbase/data
       - hbase-logs:/hbase/logs
-      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+#      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+#      - ./hbase/conf:/opt/hbase/conf
     depends_on:
       - zookeeper
     # Запускаем HBase Master. Команда запускает HBase Master,
@@ -105,12 +116,15 @@ services:
     environment:
       - HBASE_CLUSTER_DISTRIBUTED=true
       - HBASE_MANAGES_ZOOKEEPER=false
+    networks:
+      - db_network
     ports:
-      - "8080:8080"  # Порт для HBase REST сервера
+      - "${DB_PORT}:${DB_PORT}"  # Порт для HBase REST сервера
     volumes:
       - hbase-data:/hbase/data
       - hbase-logs:/hbase/logs
-      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+#      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+#      - ./hbase/conf:/opt/hbase/conf
 
     depends_on:
       - zookeeper
@@ -118,7 +132,12 @@ services:
     # Запускаем HBase REST в foreground на порту 8080
     command: ["bash", "-c", "/hbase/bin/hbase rest start -p 8080 && tail -f /hbase/logs/hbase--rest-*.log"]
     restart: unless-stopped
-
+    healthcheck:
+      test: curl --fail http://hbase-rest:${DB_PORT}/ || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 10s
+      retries: 10
 #  hbase:
 #    build: ./hbase
 #    container_name: hbase-secure
@@ -165,3 +184,12 @@ volumes:
   hbase-data:
   hbase-logs:
 
+networks:
+  production_network:
+    driver: bridge
+    enable_ipv6: true
+    internal: false
+  db_network:
+    driver: bridge
+    enable_ipv6: true
+    internal: true

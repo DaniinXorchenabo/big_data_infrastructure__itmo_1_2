@@ -3,10 +3,14 @@ FROM harisekhon/hbase:latest
 # Удаляем репозиторий edge/community, чтобы избежать ошибки "UNTRUSTED signature"
 RUN sed -i '/edge\/community/d' /etc/apk/repositories  \
     && apk update \
-    && apk add --no-cache krb5 openssh
+    && apk add --no-cache krb5 openssh curl
 
 # Копируем защищённую конфигурацию HBase
 COPY ./conf/hbase-site.xml /opt/hbase/conf/hbase-site.xml
+COPY ./conf/hbase-rest.xml /opt/hbase/conf/hbase-rest.xml
+
+#COPY ./conf/hbase-rest-users.properties /etc/hbase/conf/hbase-rest-users.properties
+#COPY ./conf/hbase-rest-users.properties /opt/hbase/conf/hbase-rest-users.properties
 
 # Копируем конфигурационный файл Kerberos для клиента HBase
 COPY ./kerberos/krb5.conf /etc/krb5.conf
