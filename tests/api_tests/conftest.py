@@ -9,7 +9,7 @@ from fastapi import FastAPI
 import logging
 
 from src.configs.config import CONFIG
-from src.web.events.init import ml_lifespan
+from src.web.events.init import main_lifespan
 from src.web.init_app import init_app
 from tests.configs import BASE_URL
 
@@ -28,7 +28,7 @@ def event_loop():
 @lru_cache(maxsize=None)
 def create_app():
 
-    app = FastAPI(lifespan=ml_lifespan)
+    app = FastAPI(lifespan=main_lifespan)
     app = init_app(app)
     return app
 
