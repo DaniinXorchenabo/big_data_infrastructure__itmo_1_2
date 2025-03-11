@@ -1,4 +1,5 @@
 import base64
+from time import sleep
 
 import requests
 
@@ -105,8 +106,10 @@ class DBController(object):
             # print(response.text)
             data = response.json()  # Возвращает данные в формате JSON
             records = self.db_ans_decode(data)
-
-            return records
+            if bool(records):
+                return records[0]
+            else:
+                return None
         else:
             # print(f"Ошибка получения строки '{row_key}' из таблицы '{table}': {response.status_code}, {response.text}")
             return None
@@ -115,7 +118,7 @@ class DBController(object):
         # Обновление строки производится путем повторного вызова insert_row,
         # так как HBase REST перезаписывает данные для указанного row_key.
         # print(f"Обновление строки '{row_key}' в таблице '{table}'...")
-        self.insert_row(table, row_key, data)
+        return self.insert_row(table, row_key, data)
 
     def delete_row(self, table, row_key):
         url = f"{self.db_url}/{table}/{row_key}"
@@ -179,6 +182,78 @@ class DBController(object):
             raise Exception(f'ошибка: {e}') from e
             return None
 
+    def get_all_tables(self):
+        """Получает список всех таблиц в HBase."""
+        url = f"{self.db_url}/"
+        headers = {"Accept": "application/json",}
+        response = requests.get(url, headers=self.auth_headers | headers)
+
+        if response.status_code == 200:
+            print(response.text)
+            return response.json().get("table", [])
+        else:
+            raise IOError(f"Ошибка при получении списка таблиц: {response.text}")
+            return []
+
+    def is_table_enabled(self, table_name):
+        """Проверяет, включена ли таблица."""
+        url = f"{self.db_url}/{table_name}/schema"
+        response = requests.get(url, headers=self.auth_headers | {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            })
+        if response.status_code == 200:
+            return response.json().get("Table", {}).get("enabled", "true") == "true"
+        return False  # Если ошибка — считаем, что таблица отключена.
+
+    def delete_table(self, table_name):
+        """Отключает и удаляет таблицу в HBase."""
+        disable_url = f"{self.db_url}/{table_name}/schema"
+        delete_url = f"{self.db_url}/{table_name}"
+
+        """Отключает таблицу (если она включена)."""
+        if not self.is_table_enabled(table_name):
+            print(f"Таблица {table_name} уже отключена.")
+            # return True
+        else:
+            # Отключаем таблицу
+            disable_data = """{"Table":{"@name":"%s", "enabled":"false"}}""" % table_name
+            # disable_data = '{"Table": {{"@name": "{table_name}", "enabled": "false"}}}}'
+
+            # response = requests.put(
+            #     disable_url,
+            #     data=disable_data,
+            #     headers=self.auth_headers | {
+            #         "Content-Type": "application/json",
+            #         # "Accept": "application/json",
+            #     },
+            # )
+            # sleep(0.5)
+            # print('------====----------', response.status_code)
+            # if response.status_code not in [200, 201]:
+            #     raise IOError(f"Ошибка при отключении таблицы {table_name}: {response.text}")
+            #     return False
+
+        # Удаляем таблицу
+        response = requests.delete(delete_url, headers=self.auth_headers)
+        sleep(0.5)
+        if response.status_code == 200 or response.status_code == 404:
+            # print(f"Таблица {table_name} успешно удалена.")
+            return True
+        else:
+            raise IOError(f"Ошибка при удалении таблицы {table_name}: {response.text}")
+            return False
+
+    def delete_all_tables(self):
+        """Удаляет все таблицы в HBase."""
+        tables = self.get_all_tables()
+
+        if not tables:
+            # print("В HBase нет таблиц для удаления.")
+            return
+
+        for table in tables:
+            self.delete_table(table['name'])
 
     def db_ans_decode(self, data):
         # 3. Декодируем row key и содержимое
@@ -190,7 +265,7 @@ class DBController(object):
             for cell in row.get("Cell", []):
                 column_name = self.decode_base64(cell["column"])  # Декодируем имя столбца
                 value = self.decode_base64(cell["$"])  # Декодируем значение
-                record[column_name] = value
+                record[column_name.removeprefix('cf:')] = value
 
             records.append(record)
         return records
