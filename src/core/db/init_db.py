@@ -11,7 +11,7 @@ from src.core.db.db_controller import DBController
 DB_CONTROLLER = DBController(CONFIG.DB_CONN_URL, CONFIG.DB_LOGIN, CONFIG.DB_PASSWORD)
 
 @asynccontextmanager
-async def init_db_conn(add: FastAPI):
+async def init_db_conn(app: FastAPI):
     tables_list = [
         'table1',
         'table2',

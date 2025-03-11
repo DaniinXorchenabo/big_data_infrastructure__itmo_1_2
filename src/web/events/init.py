@@ -10,8 +10,9 @@ from src.core.neural.models_container import MODELS_CONTAINER
 async def main_lifespan(app: FastAPI):
 
     # Load the ML model
-    async with (ml_lifespan(app), init_db_conn(app) as db_conn):
-        yield
+    async with (ml_lifespan(app)):
+        async with init_db_conn(app):
+            yield
 
 
 @asynccontextmanager
