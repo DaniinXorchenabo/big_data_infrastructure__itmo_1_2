@@ -42,9 +42,6 @@ jobs:
           curl -L -o docker/source/NGC-DL-CONTAINER-LICENSE https://gitlab.com/nvidia/container-images/cuda/-/raw/master/NGC-DL-CONTAINER-LICENSE
           curl -L -o docker/source/nvidia_entrypoint.sh https://gitlab.com/nvidia/container-images/cuda/-/raw/master/nvidia_entrypoint.sh
           chmod +x ./docker/source/nvidia_entrypoint.sh
-          
-          
-
 
       # Шаг для скачивания файлов из папки entrypoint.d
       - name: Download entrypoint.d files individually
@@ -65,14 +62,19 @@ jobs:
           echo "AI_WEIGHTS_FILENAME=${{ secrets.AI_WEIGHTS_FILENAME }}" >>  ./env/.env
           echo "AI_WEIGHTS_REPO=${{ secrets.AI_WEIGHTS_REPO }}" >>  ./env/.env
           echo "AI_WEIGHTS_REPO_FILENAME=${{ secrets.AI_WEIGHTS_REPO_FILENAME }}" >>  ./env/.env
+          
+          echo "CONTAINER_PREFIX=unittests" >>  ./env/.env
+          echo "DB_LOGIN=${{ secrets.DB_LOGIN }}" >>  ./env/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >>  ./env/.env
+          echo "DB_HOST=hbase-rest" >>  ./env/.env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >>  ./env/.env
+
           cp ./env/.env ./env/unittests.env
 
       - name: Build Docker images using Docker Compose
         run: |
-          docker-compose -f ./docker/dev.docker-compose.yml --env-file ./env/.env build
-          docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/prod.docker-compose.yml --env-file ./env/.env build
+          docker-compose -f ./docker/docker-compose.yml --env-file ./env/.env build
 
       - name: Push Docker images using Docker Compose
         run: |
-          docker-compose -f ./docker/dev.docker-compose.yml --env-file ./env/.env push
-          docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/prod.docker-compose.yml --env-file ./env/.env push
+          docker-compose -f ./docker/docker-compose.yml --env-file ./env/.env push
