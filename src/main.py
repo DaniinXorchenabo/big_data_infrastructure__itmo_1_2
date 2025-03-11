@@ -1,9 +1,9 @@
 import uvicorn
 from fastapi import FastAPI
-from src.web.events.init import ml_lifespan
+from src.web.events.init import main_lifespan
 from src.web.init_app import init_app
 
-app = FastAPI(lifespan=ml_lifespan)
+app = FastAPI(lifespan=main_lifespan)
 
 
 app = init_app(app)

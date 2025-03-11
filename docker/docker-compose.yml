@@ -2,22 +2,24 @@ version: '3.9'
 
 services:
   dl:
-    image: daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
     build:
       context: ..
       dockerfile: ./docker/lighting.Dockerfile
-      target: dev_build
+      target: backend
       args:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
 
     container_name: dl_labs
-
+    depends_on:
+      - hbase-rest
     environment:
-     - DISPLAY=:0
-     - WAYLAND_DISPLAY
-     - XDG_RUNTIME_DIR
-     - PULSE_SERVER
-     - BACKEND_HOST_URL=dl
+      - DISPLAY=:0
+      - WAYLAND_DISPLAY
+      - XDG_RUNTIME_DIR
+      - PULSE_SERVER
+      - BACKEND_HOST_URL=dl
+      - DB_HOST=hbase-rest
     env_file:
       - ../env/.env
     volumes: #!override
@@ -32,10 +34,13 @@ services:
       bash -c "
       fastapi run --workers ${BACKEND_APP_WORKERS_COUNT} --port ${BACKEND_PORT} --host 0.0.0.0  main.py
       "
+    networks:
+      - production_network
+      - db_network
     ports: #!override
       - "0.0.0.0:${BACKEND_PORT}:${BACKEND_PORT}"
     healthcheck:
-      test: curl --fail http://backend:${BACKEND_PORT}/auth/healthcheck || exit 1
+      test: curl --fail http://dl:${BACKEND_PORT}/healthcheck || exit 1
       interval: 10s
       timeout: 10s
       start_period: 10s
@@ -56,4 +61,100 @@ services:
       memlock: -1
       stack: 67108864
     memswap_limit: -1
-    ipc: "host"
+#    ipc: "host"
+  kdc:
+    build: ./kdc
+    container_name: kerberos-kdc
+    ports:
+      - "88:88"
+      - "749:749"
+    volumes:
+      - kdc-data:/var/kerberos/krb5kdc
+      - ./kdc/keytabs:/etc/krb5kdc  # Монтирование каталога с keytab-файлами
+      - ./hbase/conf:/etc/hbase/conf
+
+    restart: unless-stopped
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - db_network
+    ports:
+      - "2181:2181"
+
+  hbase:
+    build: ./hbase
+    container_name: hbase-secure
+    environment:
+      - HBASE_CLUSTER_DISTRIBUTED=true
+      - HBASE_MANAGES_ZOOKEEPER=false
+    networks:
+      - db_network
+    ports:
+      - "16010:16010"  # веб-интерфейс HMaster
+      - "16020:16020"  # порт регионсерверов (если требуется)
+    volumes:
+      - hbase-data:/opt/hbase/data
+      - hbase-logs:/hbase/logs
+#      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+#      - ./hbase/conf:/opt/hbase/conf
+    depends_on:
+      - zookeeper
+    # Запускаем HBase Master. Команда запускает HBase Master,
+    # который при распределённом режиме использует внешний ZooKeeper.
+    command: ["bash", "-c", "/hbase/bin/start-hbase.sh master && tail -f /hbase/logs/hbase--master-*.log"]
+    restart: unless-stopped
+
+  hbase-rest:
+    build: ./hbase
+    container_name: hbase-rest
+    environment:
+      - HBASE_CLUSTER_DISTRIBUTED=true
+      - HBASE_MANAGES_ZOOKEEPER=false
+    networks:
+      - db_network
+    ports:
+      - "${DB_PORT}:${DB_PORT}"  # Порт для HBase REST сервера
+    volumes:
+      - hbase-data:/hbase/data
+      - hbase-logs:/hbase/logs
+#      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
+#      - ./hbase/conf:/opt/hbase/conf
+
+    depends_on:
+      - zookeeper
+      - hbase
+    # Запускаем HBase REST в foreground на порту 8080
+    command: ["bash", "-c", "/hbase/bin/hbase rest start -p 8080 && tail -f /hbase/logs/hbase--rest-*.log"]
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail http://hbase-rest:${DB_PORT}/ || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 10s
+      retries: 10
+
+volumes:
+  kdc-data:
+    name: ${CONTAINER_PREFIX}-kdc-data
+  hbase-data:
+    name: ${CONTAINER_PREFIX}-hbase-data
+  hbase-logs:
+    name: ${CONTAINER_PREFIX}-hbase-logs
+
+networks:
+  production_network:
+    driver: bridge
+#    enable_ipv6: true
+    internal: false
+    name: ${CONTAINER_PREFIX}-production_network
+  db_network:
+    driver: bridge
+#    enable_ipv6: true
+    internal: true
+    name: ${CONTAINER_PREFIX}-db_network

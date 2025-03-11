@@ -33,22 +33,29 @@ jobs:
 
     - name: Copy .env file
       run: |
-        cp ./env/example.env ./env/.env
-        echo "JUPYTER_TOKEN=${{ secrets.JUPYTER_TOKEN }}" >>  ./env/.env
-        echo "AI_WEIGHTS_FILENAME=${{ secrets.AI_WEIGHTS_FILENAME }}" >>  ./env/.env
-        echo "AI_WEIGHTS_REPO=${{ secrets.AI_WEIGHTS_REPO }}" >>  ./env/.env
-        echo "AI_WEIGHTS_REPO_FILENAME=${{ secrets.AI_WEIGHTS_REPO_FILENAME }}" >>  ./env/.env
-        cp ./env/.env ./env/unittests.env
+          cp ./env/example.env ./env/.env
+          echo "JUPYTER_TOKEN=${{ secrets.JUPYTER_TOKEN }}" >>  ./env/.env
+          echo "AI_WEIGHTS_FILENAME=${{ secrets.AI_WEIGHTS_FILENAME }}" >>  ./env/.env
+          echo "AI_WEIGHTS_REPO=${{ secrets.AI_WEIGHTS_REPO }}" >>  ./env/.env
+          echo "AI_WEIGHTS_REPO_FILENAME=${{ secrets.AI_WEIGHTS_REPO_FILENAME }}" >>  ./env/.env
+          
+          echo "CONTAINER_PREFIX=unittests" >>  ./env/.env
+          echo "DB_LOGIN=${{ secrets.DB_LOGIN }}" >>  ./env/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >>  ./env/.env
+          echo "DB_HOST=hbase-rest" >>  ./env/.env
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >>  ./env/.env
+
+          cp ./env/.env ./env/unittests.env
 
     - name: Pull images from Docker Compose
       run: |
-        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  pull
+        docker-compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull
 
     - name: Run tests
       run: |
-        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  up  -d --no-deps unittests 
-        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml logs -f unittests
-        TEST_EXIT_CODE=$(docker inspect dl_labs_unittests --format='{{.State.ExitCode}}')
+        docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d 
+        docker exec -it dl_labs pytest -c ./tests/pytest.ini 
+        TEST_EXIT_CODE=$(docker inspect dl_labs --format='{{.State.ExitCode}}')
         docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env down
         if [ "$TEST_EXIT_CODE" -ne 0 ]; then
               echo "Tests failed with exit code $TEST_EXIT_CODE"
@@ -58,5 +65,5 @@ jobs:
         fi
     - name: Shutdown Docker Compose
       run: |
-        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env  down
+        docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  down
 

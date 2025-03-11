@@ -33,3 +33,4 @@
 /**/.pytest_cache/**/*
 /**/*.coverage
 /**/.cache/**/*
+*.properties

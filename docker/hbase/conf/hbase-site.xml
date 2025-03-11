@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<configuration>
+  <!-- Запускаем HBase в распределённом режиме -->
+  <property>
+    <name>hbase.cluster.distributed</name>
+    <value>true</value>
+  </property>
+  <!-- Корневой каталог для данных HBase -->
+  <property>
+    <name>hbase.rootdir</name>
+    <value>file:///hbase/data</value>
+  </property>
+  <!-- Используем внешний ZooKeeper -->
+  <property>
+    <name>hbase.zookeeper.quorum</name>
+    <value>zookeeper</value>
+  </property>
+  <property>
+    <name>hbase.zookeeper.property.clientPort</name>
+    <value>2181</value>
+  </property>
+  <!-- Отключаем управление ZooKeeper внутри HBase -->
+  <property>
+    <name>hbase.manages.zookeeper</name>
+    <value>false</value>
+  </property>
+  <!-- Настройка безопасности Kerberos -->
+<!--  <property>-->
+<!--    <name>hbase.security.authentication</name>-->
+<!--    <value>kerberos</value>-->
+<!--  </property>-->
+  <property>
+    <name>hbase.security.authorization</name>
+    <value>true</value>
+  </property>
+  <!-- Kerberos-принципалы (шаблон _HOST заменяется на имя узла) -->
+  <property>
+    <name>hbase.master.kerberos.principal</name>
+    <value>hbase/_HOST@EXAMPLE.COM</value>
+  </property>
+  <property>
+    <name>hbase.regionserver.kerberos.principal</name>
+    <value>hbase/_HOST@EXAMPLE.COM</value>
+  </property>
+
+      <!-- Разрешаем аутентификацию через Basic Auth -->
+    <property>
+        <name>hbase.rest.authentication.type</name>
+        <value>basic</value>
+    </property>
+
+    <!-- Указываем путь к файлу с пользователями -->
+    <property>
+        <name>hbase.rest.authentication.credential.file</name>
+        <value>/etc/hbase/conf/hbase-rest-users.properties</value>
+    </property>
+
+
+    <property>
+        <name>hbase.security.authentication</name>
+        <value>simple</value> <!-- Или 'kerberos', если используешь Kerberos -->
+    </property>
+
+
+
+    <property>
+        <name>hbase.rest.filter.classes</name>
+        <value>org.apache.hadoop.hbase.rest.filter.AuthFilter</value>
+    </property>
+
+    <property>
+        <name>hbase.rest.ssl.enabled</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>hbase.rest.ssl.keystore.store</name>
+        <value>/etc/hbase/conf/keystore.jks</value>
+    </property>
+
+    <property>
+        <name>hbase.rest.ssl.keystore.password</name>
+        <value>your_keystore_password</value>
+    </property>
+
+</configuration>
