@@ -150,11 +150,11 @@ volumes:
 networks:
   production_network:
     driver: bridge
-    enable_ipv6: true
+#    enable_ipv6: true
     internal: false
     name: ${CONTAINER_PREFIX}-production_network
   db_network:
     driver: bridge
-    enable_ipv6: true
+#    enable_ipv6: true
     internal: true
     name: ${CONTAINER_PREFIX}-db_network
