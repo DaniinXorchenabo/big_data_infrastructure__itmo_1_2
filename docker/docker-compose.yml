@@ -40,7 +40,7 @@ services:
     ports: #!override
       - "0.0.0.0:${BACKEND_PORT}:${BACKEND_PORT}"
     healthcheck:
-      test: curl --fail http://dl:${BACKEND_PORT}/auth/healthcheck || exit 1
+      test: curl --fail http://dl:${BACKEND_PORT}/healthcheck || exit 1
       interval: 10s
       timeout: 10s
       start_period: 10s
@@ -69,7 +69,7 @@ services:
       - "88:88"
       - "749:749"
     volumes:
-      - kdc-data_2:/var/kerberos/krb5kdc
+      - kdc-data:/var/kerberos/krb5kdc
       - ./kdc/keytabs:/etc/krb5kdc  # Монтирование каталога с keytab-файлами
       - ./hbase/conf:/etc/hbase/conf
 
@@ -138,58 +138,23 @@ services:
       timeout: 10s
       start_period: 10s
       retries: 10
-#  hbase:
-#    build: ./hbase
-#    container_name: hbase-secure
-#    ports:
-#      - "16010:16010"  # веб-интерфейс мастера
-#      - "16020:16020"  # внутренние порты (например, для RegionServer)
-#      - "2181:2181"    # порт встроенного ZooKeeper
-#    volumes:
-#      - hbase-data:/opt/hbase/data
-#      - hbase-logs:/hbase/logs
-#      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
-#
-#    environment:
-#      # Эти переменные могут быть также заданы в hbase-env.sh, но заданы здесь для наглядности:
-#      - HBASE_MANAGES_ZK=true
-#      - HBASE_CLUSTER_DISTRIBUTED=false
-#      - HBASE_SECURITY_AUTHENTICATION=kerberos
-#      - HBASE_SECURITY_AUTHORIZATION=true
-#    restart: unless-stopped
-
-#    command: ["bash", "-c", "/opt/hbase/bin/start-hbase.sh master && tail -f /hbase/logs/hbase--master-*.log"]
-#  hbase-rest:
-#    build: ./hbase
-#    container_name: hbase-rest
-#    # Запускаем REST-сервер в режиме "foreground" (-f) на порту 8080,
-#    # чтобы контейнер не завершался сразу после старта
-#    volumes:
-#      - ./kdc/keytabs:/opt/hbase/kerberos  # монтирование каталога с keytab
-#
-#    environment:
-#      - HBASE_SECURITY_AUTHENTICATION=kerberos
-#      - HBASE_SECURITY_AUTHORIZATION=true
-#      - HBASE_MANAGES_ZK=false
-#
-#    command: ["hbase", "rest", "start", "-f", "-p", "8080", ]
-#    ports:
-#      - "0.0.0.0:18080:8080"
-#    depends_on:
-#      - hbase
-#    restart: unless-stopped
 
 volumes:
-  kdc-data_2:
+  kdc-data:
+    name: ${CONTAINER_PREFIX}-kdc-data
   hbase-data:
+    name: ${CONTAINER_PREFIX}-hbase-data
   hbase-logs:
+    name: ${CONTAINER_PREFIX}-hbase-logs
 
 networks:
   production_network:
     driver: bridge
     enable_ipv6: true
     internal: false
+    name: ${CONTAINER_PREFIX}-production_network
   db_network:
     driver: bridge
     enable_ipv6: true
     internal: true
+    name: ${CONTAINER_PREFIX}-db_network
