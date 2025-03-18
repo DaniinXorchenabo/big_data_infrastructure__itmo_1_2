@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  dl:
+    environment:
+      - DISPLAY=:0
+      - WAYLAND_DISPLAY
+      - XDG_RUNTIME_DIR
+      - PULSE_SERVER
+    volumes: #!override
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /mnt/wslg:/mnt/wslg
+      - /usr/lib/wsl:/usr/lib/wsl
+    devices:
+      - /dev/dxg:/dev/dxg
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+          memory: 40G
+        limits:
+          memory: 60G
+    ulimits:
+      memlock: -1
+      stack: 67108864
+    memswap_limit: -1
+

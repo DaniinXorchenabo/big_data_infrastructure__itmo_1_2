@@ -13,23 +13,17 @@ services:
     container_name: dl_labs
     depends_on:
       - hbase-rest
+      - vault
     environment:
-      - DISPLAY=:0
-      - WAYLAND_DISPLAY
-      - XDG_RUNTIME_DIR
-      - PULSE_SERVER
       - BACKEND_HOST_URL=dl
       - DB_HOST=hbase-rest
+      - VAULT_HOST=vault
     env_file:
       - ../env/.env
     volumes: #!override
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - /mnt/wslg:/mnt/wslg
-      - /usr/lib/wsl:/usr/lib/wsl
       - type: bind
-        source: ../docker/jupyter_config
-        target: /root/.jupyter/
-
+        source: ../neural/logs/prod
+        target: /workspace/NN/neural/logs/prod
     command: >
       bash -c "
       fastapi run --workers ${BACKEND_APP_WORKERS_COUNT} --port ${BACKEND_PORT} --host 0.0.0.0  main.py
@@ -45,26 +39,13 @@ services:
       timeout: 10s
       start_period: 10s
       retries: 10
-    devices:
-      - /dev/dxg:/dev/dxg
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
-          memory: 40G
-        limits:
-          memory: 60G
-    ulimits:
-      memlock: -1
-      stack: 67108864
-    memswap_limit: -1
-#    ipc: "host"
+
   kdc:
+    depends_on:
+      - vault
     build: ./kdc
     container_name: kerberos-kdc
+    image: daniinxorchenabo/itmo-dl-labs-kerberos-kdc:latest
     ports:
       - "88:88"
       - "749:749"
@@ -74,7 +55,6 @@ services:
       - ./hbase/conf:/etc/hbase/conf
 
     restart: unless-stopped
-
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -89,6 +69,7 @@ services:
 
   hbase:
     build: ./hbase
+    image: daniinxorchenabo/itmo-dl-labs-hbase:latest
     container_name: hbase-secure
     environment:
       - HBASE_CLUSTER_DISTRIBUTED=true
@@ -105,6 +86,7 @@ services:
 #      - ./hbase/conf:/opt/hbase/conf
     depends_on:
       - zookeeper
+      - vault
     # Запускаем HBase Master. Команда запускает HBase Master,
     # который при распределённом режиме использует внешний ZooKeeper.
     command: ["bash", "-c", "/hbase/bin/start-hbase.sh master && tail -f /hbase/logs/hbase--master-*.log"]
@@ -112,6 +94,7 @@ services:
 
   hbase-rest:
     build: ./hbase
+    image: daniinxorchenabo/itmo-dl-labs-hbase:latest
     container_name: hbase-rest
     environment:
       - HBASE_CLUSTER_DISTRIBUTED=true
@@ -129,11 +112,36 @@ services:
     depends_on:
       - zookeeper
       - hbase
+      - vault
     # Запускаем HBase REST в foreground на порту 8080
     command: ["bash", "-c", "/hbase/bin/hbase rest start -p 8080 && tail -f /hbase/logs/hbase--rest-*.log"]
     restart: unless-stopped
     healthcheck:
       test: curl --fail http://hbase-rest:${DB_PORT}/ || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 10s
+      retries: 10
+
+  vault:
+    image: daniinxorchenabo/itmo-dl-labs-vault:latest
+    build: ./vault
+    container_name: vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_ADDR: "http://127.0.0.1:8200"
+    volumes:
+      - ./vault/vault-config.hcl:/vault/config/vault-config.hcl
+      - ./vault/init_vault.sh:/vault/init_vault.sh
+      - vault-data:/vault/data
+    cap_add:
+      - IPC_LOCK
+    command: "vault server -config=/vault/config/vault-config.hcl"
+    networks:
+      - db_network
+    healthcheck:
+      test: curl --fail http://vault:8200/v1/sys/seal-status || exit 1
       interval: 10s
       timeout: 10s
       start_period: 10s
@@ -146,6 +154,8 @@ volumes:
     name: ${CONTAINER_PREFIX}-hbase-data
   hbase-logs:
     name: ${CONTAINER_PREFIX}-hbase-logs
+  vault-data:
+    name: ${CONTAINER_PREFIX}-vault_t3
 
 networks:
   production_network:

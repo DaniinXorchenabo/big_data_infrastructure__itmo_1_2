@@ -25,8 +25,44 @@ cp ./env/example.env ./env/unittests.env
 nano ./env/.env
 nano ./env/unittests.env
 ```
+8. Init `vault` and add secrets (for more info, see `./docker/vault/init_vault.sh` or `./.github/workflows/cd-pipeline.yml`).
+
+8.1. Init vault
+```bash
+docker-compose -f .\docker\docker-compose.yml --env-file .\env\.env  up -d --build --force-recreate vault
+docker exec -it  vault mkdir -p /vault/data
+docker exec -it  vault chown -R vault /vault/data
+docker exec -it  vault vault operator init -format=json 
+```
+8.2. Add `root_token` and `unseal_keys` to /env/.env and  /env/unittests.env
+
+8.3. Add necessary secrets as environ variables
+```bash
+export DB_PORT =
+export DB_LOGIN =
+export DB_PASSWORD =
+export JUPYTER_TOKEN =
+export AI_WEIGHTS_REPO =
+export AI_WEIGHTS_FILENAME =
+export AI_WEIGHTS_REPO_FILENAME =
+```
+
+8.4. Add necessary secrets into `vault`
+```bash
+./docker/vault/init_variables.sh
+```
 
 8. Run docker image
+
+Run main only `docker-compose`
+```bash
+docker-compose -f .\docker\docker-compose.yml --env-file .\env\.env  up -d --build --force-recreate
+```
+
+Run main `docker-compose` with `gpu`
+```bash
+docker-compose -f .\docker\docker-compose.yml -f .\docker\gpu.docker-compose.yml  --env-file .\env\.env  up -d --build --force-recreate
+```
 
 Run for developing in jupyter notebooks:
 ```bash

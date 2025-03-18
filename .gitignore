@@ -34,3 +34,9 @@
 /**/*.coverage
 /**/.cache/**/*
 *.properties
+*.7z
+*.rar
+*.zip
+*.lnk
+*.log
+*.tmp
