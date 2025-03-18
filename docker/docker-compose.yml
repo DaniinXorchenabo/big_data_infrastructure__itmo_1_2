@@ -145,7 +145,7 @@ services:
     build: ./vault
     container_name: vault
     ports:
-      - "0.0.0.0:8200:8200"
+      - "18200:8200"
     environment:
       VAULT_ADDR: "http://0.0.0.0:8200"
     volumes:
@@ -153,12 +153,11 @@ services:
       - ./vault/init_vault.sh:/vault/init_vault.sh
 
 #      - vault-data:/vault/data
-#    cap_add:
-#      - IPC_LOCK
+    cap_add:
+      - IPC_LOCK
     command: "vault server -config=/vault/config/vault-config.hcl"
     networks:
       - db_network
-      - production_network
 
 volumes:
   kdc-data:
