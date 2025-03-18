@@ -145,9 +145,9 @@ services:
     build: ./vault
     container_name: vault
     ports:
-      - "18200:8200"
+      - "18200:18200"
     environment:
-      VAULT_ADDR: "http://0.0.0.0:8200"
+      VAULT_ADDR: "http://0.0.0.0:18200"
     volumes:
       - ./vault/vault-config.hcl:/vault/config/vault-config.hcl
       - ./vault/init_vault.sh:/vault/init_vault.sh
