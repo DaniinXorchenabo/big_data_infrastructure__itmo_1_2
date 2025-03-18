@@ -20,7 +20,10 @@ services:
       - VAULT_HOST=vault
     env_file:
       - ../env/.env
-
+    volumes: #!override
+      - type: bind
+        source: ../neural/logs/prod
+        target: /workspace/NN/neural/logs/prod
     command: >
       bash -c "
       fastapi run --workers ${BACKEND_APP_WORKERS_COUNT} --port ${BACKEND_PORT} --host 0.0.0.0  main.py
