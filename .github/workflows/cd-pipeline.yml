@@ -92,16 +92,29 @@ jobs:
 
         cp -f ./env/unittests.env ./env/.env
 
+    - name: Unseal vault.
+      run: |     
+        seal_status=$(docker exec -i  vault vault status -format=json | jq -r '.sealed')
+        if [[ "$seal_status" == "true" ]]; then
+            echo "Vault запечатан. Начинаем процесс разблокировки..."
+            docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_1"
+            docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_2"
+            docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_3"
+        fi
+        echo "Vault уже разблокирован."
+
     - name: Imitate secrets exists into vault.
       run: |        
         sudo docker exec -i  vault vault login $VAULT_ROOT_TOKEN
-        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME DB_PORT="${{ secrets.DB_PORT }}"
-        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME DB_LOGIN="${{ secrets.DB_LOGIN }}"
-        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
-        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME JUPYTER_TOKEN="${{ secrets.JUPYTER_TOKEN }}"
-        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME AI_WEIGHTS_REPO="${{ secrets.AI_WEIGHTS_REPO }}"
-        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME AI_WEIGHTS_FILENAME="${{ secrets.AI_WEIGHTS_FILENAME }}"
-        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME AI_WEIGHTS_REPO_FILENAME="${{ secrets.AI_WEIGHTS_REPO_FILENAME }}"
+        sudo docker exec -i  vault vault secrets enable -path="$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME" kv
+
+        docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_PORT" key="$DB_PORT"
+        docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_LOGIN" key="$DB_LOGIN"
+        docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_PASSWORD" key="$DB_PASSWORD"
+        docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/JUPYTER_TOKEN" key="$JUPYTER_TOKEN"
+        docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/AI_WEIGHTS_REPO" key="$AI_WEIGHTS_REPO"
+        docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/AI_WEIGHTS_FILENAME" key="$AI_WEIGHTS_FILENAME"
+        docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/AI_WEIGHTS_REPO_FILENAME" key="$AI_WEIGHTS_REPO_FILENAME"
 
     - name: Pull images from Docker Compose
       run: |
@@ -123,4 +136,28 @@ jobs:
       run: |
         docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  down
 
-    # TODO: добавить очищение
+    - name: cleanup
+      run: |
+        - rm -rf ./*
+        export VAULT_SECRETS_PATH=""
+        export VAULT_SECRETS_NAME=""
+        export VAULT_UNSEAL_KEY_1=""
+        export VAULT_UNSEAL_KEY_2=""
+        export VAULT_UNSEAL_KEY_3=""
+        export VAULT_UNSEAL_KEY_4=""
+        export VAULT_UNSEAL_KEY_5=""
+        
+        export unseal_keys=""
+        export root_token=""
+        export init_output=""
+        export init_output=""
+        export init_output=""
+        export init_output=""
+        
+        export DB_PORT=""
+        export DB_LOGIN=""
+        export DB_PASSWORD=""
+        export JUPYTER_TOKEN=""
+        export AI_WEIGHTS_REPO=""
+        export AI_WEIGHTS_FILENAME=""
+        export AI_WEIGHTS_REPO_FILENAME=""
