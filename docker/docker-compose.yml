@@ -15,21 +15,11 @@ services:
       - hbase-rest
       - vault
     environment:
-      - DISPLAY=:0
-      - WAYLAND_DISPLAY
-      - XDG_RUNTIME_DIR
-      - PULSE_SERVER
       - BACKEND_HOST_URL=dl
       - DB_HOST=hbase-rest
+      - VAULT_HOST=vault
     env_file:
       - ../env/.env
-    volumes: #!override
-      - /tmp/.X11-unix:/tmp/.X11-unix
-      - /mnt/wslg:/mnt/wslg
-      - /usr/lib/wsl:/usr/lib/wsl
-      - type: bind
-        source: ../docker/jupyter_config
-        target: /root/.jupyter/
 
     command: >
       bash -c "
@@ -46,23 +36,7 @@ services:
       timeout: 10s
       start_period: 10s
       retries: 10
-    devices:
-      - /dev/dxg:/dev/dxg
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [ gpu ]
-          memory: 40G
-        limits:
-          memory: 60G
-    ulimits:
-      memlock: -1
-      stack: 67108864
-    memswap_limit: -1
-#    ipc: "host"
+
   kdc:
     depends_on:
       - vault
@@ -157,8 +131,7 @@ services:
     volumes:
       - ./vault/vault-config.hcl:/vault/config/vault-config.hcl
       - ./vault/init_vault.sh:/vault/init_vault.sh
-
-#      - vault-data:/vault/data
+      - vault-data:/vault/data
     cap_add:
       - IPC_LOCK
     command: "vault server -config=/vault/config/vault-config.hcl"
@@ -179,7 +152,7 @@ volumes:
   hbase-logs:
     name: ${CONTAINER_PREFIX}-hbase-logs
   vault-data:
-    name: ${CONTAINER_PREFIX}-vault_t2
+    name: ${CONTAINER_PREFIX}-vault_t3
 
 networks:
   production_network:

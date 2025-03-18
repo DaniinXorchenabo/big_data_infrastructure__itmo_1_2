@@ -5,7 +5,7 @@
 #mkdir -p /vault/data
 #chown -R vault /vault/data
 mkdir -p /vault/data
-chown -R vault /vault/data &&
+chown -R vault /vault/data
 init_output=$( vault operator init -format=json)
 
 if [ $? -ne 0 ]; then
