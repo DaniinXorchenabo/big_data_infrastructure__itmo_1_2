@@ -7,6 +7,9 @@ listener "tcp" {
 storage "file" {
   path = "/vault/data"
 }
+path "dev/data/daniil" {
+  capabilities = ["read", "list"]
+}
 
 disable_mlock = true
 ui            = true
