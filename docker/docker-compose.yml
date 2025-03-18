@@ -153,11 +153,12 @@ services:
       - ./vault/init_vault.sh:/vault/init_vault.sh
 
 #      - vault-data:/vault/data
-    cap_add:
-      - IPC_LOCK
+#    cap_add:
+#      - IPC_LOCK
     command: "vault server -config=/vault/config/vault-config.hcl"
     networks:
       - db_network
+      - production_network
 
 volumes:
   kdc-data:
