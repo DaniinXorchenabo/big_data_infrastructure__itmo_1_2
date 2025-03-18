@@ -14,7 +14,8 @@ if [ $? -ne 0 ]; then
 fi
 
 # Извлекаем unseal-ключи (массив) и root-токен с помощью jq
-unseal_keys=$(echo "$init_output" | jq -r '.unseal_keys_b64[]')  # unseal_keys_hex
+#unseal_keys=$(echo "$init_output" | jq -r '.unseal_keys_b64[]')  # unseal_keys_hex
+readarray -t unseal_keys < <(echo "$init_output" | jq -r '.unseal_keys_b64[]')
 root_token=$(echo "$init_output" | jq -r '.root_token')
 
 # Сохраняем первые три unseal-ключа в переменные окружения

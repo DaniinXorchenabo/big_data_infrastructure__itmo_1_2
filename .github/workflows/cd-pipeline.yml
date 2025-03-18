@@ -47,7 +47,11 @@ jobs:
 
           cp ./env/.env ./env/unittests.env
 
-    - name: Vault testing secrets
+    - name: Pull vault image from Docker Compose
+      run: |
+        docker-compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull vault
+
+    - name: Get Vault tokens
       run: |
         sudo docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d --build vault
         sudo docker exec -i  vault mkdir -p /vault/data
@@ -66,7 +70,7 @@ jobs:
         fi
 
         # Извлекаем unseal-ключи (массив) и root-токен с помощью jq
-        unseal_keys=$(echo "$init_output" | jq -r '.unseal_keys_b64[]')  # unseal_keys_hex
+        readarray -t unseal_keys < <(echo "$init_output" | jq -r '.unseal_keys_b64[]')
         root_token=$(echo "$init_output" | jq -r '.root_token')
 
         # Сохраняем первые три unseal-ключа в переменные окружения
@@ -75,35 +79,37 @@ jobs:
         export VAULT_UNSEAL_KEY_3="${unseal_keys[2]}"
         export VAULT_UNSEAL_KEY_4="${unseal_keys[3]}"
         export VAULT_UNSEAL_KEY_5="${unseal_keys[4]}"
-        # При необходимости можно добавить дополнительные ключи
-        #sleep 10s
         # Сохраняем root-токен
         export VAULT_ROOT_TOKEN="$root_token"
 
-        echo "Инициализация Vault завершена. Ключи сохранены в переменные окружения:"
-        echo "VAULT_UNSEAL_KEY_1=$VAULT_UNSEAL_KEY_1"
-        echo "VAULT_UNSEAL_KEY_2=$VAULT_UNSEAL_KEY_2"
-        echo "VAULT_UNSEAL_KEY_3=$VAULT_UNSEAL_KEY_3"
-        echo "VAULT_ROOT_TOKEN=$VAULT_ROOT_TOKEN"
-        
+    - name: Add vault secrets to env files.
+      run: |
+        echo "VAULT_UNSEAL_KEY_1=$VAULT_UNSEAL_KEY_1" >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_2=$VAULT_UNSEAL_KEY_2" >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_3=$VAULT_UNSEAL_KEY_3" >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_4=$VAULT_UNSEAL_KEY_4" >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_5=$VAULT_UNSEAL_KEY_5" >>  ./env/unittests.env
+        echo "VAULT_ROOT_TOKEN=$VAULT_ROOT_TOKEN" >>  ./env/unittests.env
 
-#    - name: Pull images from Docker Compose
-#      run: |
-#        docker-compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull
-#
-#    - name: Run tests
-#      run: |
-#        docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d
-#        docker exec -it dl_labs pytest -c ./tests/pytest.ini
-#        TEST_EXIT_CODE=$(docker inspect dl_labs --format='{{.State.ExitCode}}')
-#        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env down
-#        if [ "$TEST_EXIT_CODE" -ne 0 ]; then
-#              echo "Tests failed with exit code $TEST_EXIT_CODE"
-#              exit $TEST_EXIT_CODE
-#            else
-#              echo "Tests passed successfully."
-#        fi
-#    - name: Shutdown Docker Compose
-#      run: |
-#        docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  down
+        cp -f ./env/unittests.env ./env/.env
+
+    - name: Pull images from Docker Compose
+      run: |
+        docker-compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull
+
+    - name: Run tests
+      run: |
+        docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d
+        docker exec -it dl_labs pytest -c ./tests/pytest.ini
+        TEST_EXIT_CODE=$(docker inspect dl_labs --format='{{.State.ExitCode}}')
+        docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env down
+        if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+              echo "Tests failed with exit code $TEST_EXIT_CODE"
+              exit $TEST_EXIT_CODE
+            else
+              echo "Tests passed successfully."
+        fi
+    - name: Shutdown Docker Compose
+      run: |
+        docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  down
 
