@@ -30,20 +30,19 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y docker-compose
   
+    - name: Set environ variables
+      run: |
+        export VAULT_SECRETS_PATH="test"
+        export VAULT_SECRETS_NAME="unittests"
 
     - name: Copy .env file
       run: |
           cp ./env/example.env ./env/.env
-          echo "JUPYTER_TOKEN=${{ secrets.JUPYTER_TOKEN }}" >>  ./env/.env
-          echo "AI_WEIGHTS_FILENAME=${{ secrets.AI_WEIGHTS_FILENAME }}" >>  ./env/.env
-          echo "AI_WEIGHTS_REPO=${{ secrets.AI_WEIGHTS_REPO }}" >>  ./env/.env
-          echo "AI_WEIGHTS_REPO_FILENAME=${{ secrets.AI_WEIGHTS_REPO_FILENAME }}" >>  ./env/.env
-          
+          echo "VAULT_SECRETS_PATH=$VAULT_SECRETS_PATH" >>  ./env/.env
+          echo "VAULT_SECRETS_NAME=$VAULT_SECRETS_NAME" >>  ./env/.env
+
           echo "CONTAINER_PREFIX=unittests" >>  ./env/.env
-          echo "DB_LOGIN=${{ secrets.DB_LOGIN }}" >>  ./env/.env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >>  ./env/.env
           echo "DB_HOST=hbase-rest" >>  ./env/.env
-          echo "DB_PORT=${{ secrets.DB_PORT }}" >>  ./env/.env
 
           cp ./env/.env ./env/unittests.env
 
@@ -82,7 +81,7 @@ jobs:
         # Сохраняем root-токен
         export VAULT_ROOT_TOKEN="$root_token"
 
-    - name: Add vault secrets to env files.
+    - name: Add vault secrets config to env files.
       run: |
         echo "VAULT_UNSEAL_KEY_1=$VAULT_UNSEAL_KEY_1" >>  ./env/unittests.env
         echo "VAULT_UNSEAL_KEY_2=$VAULT_UNSEAL_KEY_2" >>  ./env/unittests.env
@@ -92,6 +91,17 @@ jobs:
         echo "VAULT_ROOT_TOKEN=$VAULT_ROOT_TOKEN" >>  ./env/unittests.env
 
         cp -f ./env/unittests.env ./env/.env
+
+    - name: Imitate secrets exists into vault.
+      run: |        
+        sudo docker exec -i  vault vault login $VAULT_ROOT_TOKEN
+        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME DB_PORT="${{ secrets.DB_PORT }}"
+        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME DB_LOGIN="${{ secrets.DB_LOGIN }}"
+        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME JUPYTER_TOKEN="${{ secrets.JUPYTER_TOKEN }}"
+        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME AI_WEIGHTS_REPO="${{ secrets.AI_WEIGHTS_REPO }}"
+        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME AI_WEIGHTS_FILENAME="${{ secrets.AI_WEIGHTS_FILENAME }}"
+        sudo docker exec -i  vault vault kv put $VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME AI_WEIGHTS_REPO_FILENAME="${{ secrets.AI_WEIGHTS_REPO_FILENAME }}"
 
     - name: Pull images from Docker Compose
       run: |
@@ -113,3 +123,4 @@ jobs:
       run: |
         docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  down
 
+    # TODO: добавить очищение
