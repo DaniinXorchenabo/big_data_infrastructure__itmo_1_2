@@ -50,10 +50,8 @@ jobs:
     - name: Vault testing secrets
       run: |
         sudo docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d  vault 
-        sudo docker exec -it  vault mkdir -p /vault/data
-        sudo docker exec -it  vault chown -R vault /vault/data
-        sudo docker exec -it  vault vault operator init -format=json
-        
+        sudo docker exec -i  vault mkdir -p /vault/data
+        sudo docker exec -i  vault chown -R vault /vault/data        
         init_output=$(sudo docker exec -i  vault vault operator init -format=json)      
 
         if [ $? -ne 0 ]; then
