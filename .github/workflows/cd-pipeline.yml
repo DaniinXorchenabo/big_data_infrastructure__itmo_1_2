@@ -100,7 +100,14 @@ jobs:
         cp -f ./env/unittests.env ./env/.env
 
     - name: Unseal vault.
-      run: |     
+      run: |  
+        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
+        [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
+        
         seal_status=$(sudo docker exec -i  vault vault status -format=json | jq -r '.sealed')
         if [[ "$seal_status" == "true" ]]; then
             echo "Vault запечатан. Начинаем процесс разблокировки..."
@@ -115,8 +122,15 @@ jobs:
 #            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_3"
 
     - name: Imitate secrets exists into vault.
-      run: |        
-        sudo docker exec -i  vault vault login $VAULT_ROOT_TOKEN
+      run: |  
+        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
+        [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
+        
+        [[ -n "$VAULT_ROOT_TOKEN" ]] && sudo docker exec -i  vault vault login ${VAULT_ROOT_TOKEN} || echo "skip empty key VAULT_ROOT_TOKEN"
         sudo docker exec -i  vault vault secrets enable -path="$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME" kv
 
         sudo docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_PORT" key="$DB_PORT"
