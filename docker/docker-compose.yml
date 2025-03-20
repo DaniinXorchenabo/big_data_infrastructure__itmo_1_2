@@ -26,15 +26,15 @@ services:
         target: /workspace/NN/neural/logs/prod
     command: >
       bash -c "
-      fastapi run --workers ${BACKEND_APP_WORKERS_COUNT} --port ${BACKEND_PORT} --host 0.0.0.0  main.py
+      fastapi run --workers ${BACKEND_APP_WORKERS_COUNT:-1} --port ${BACKEND_PORT:-8000} --host 0.0.0.0  main.py
       "
     networks:
       - production_network
       - db_network
     ports: #!override
-      - "0.0.0.0:${BACKEND_PORT}:${BACKEND_PORT}"
+      - "0.0.0.0:${BACKEND_PORT:-8000}:${BACKEND_PORT:-8000}"
     healthcheck:
-      test: curl --fail http://dl:${BACKEND_PORT}/healthcheck || exit 1
+      test: curl --fail http://dl:${BACKEND_PORT:-8000}/healthcheck || exit 1
       interval: 10s
       timeout: 10s
       start_period: 10s
@@ -102,7 +102,7 @@ services:
     networks:
       - db_network
     ports:
-      - "${DB_PORT}:${DB_PORT}"  # Порт для HBase REST сервера
+      - "${DB_PORT:-8080}:${DB_PORT:-8080}"  # Порт для HBase REST сервера
     volumes:
       - hbase-data:/hbase/data
       - hbase-logs:/hbase/logs
@@ -117,7 +117,7 @@ services:
     command: ["bash", "-c", "/hbase/bin/hbase rest start -p 8080 && tail -f /hbase/logs/hbase--rest-*.log"]
     restart: unless-stopped
     healthcheck:
-      test: curl --fail http://hbase-rest:${DB_PORT}/ || exit 1
+      test: curl --fail http://hbase-rest:${DB_PORT:-8080}/ || exit 1
       interval: 10s
       timeout: 10s
       start_period: 10s
@@ -149,22 +149,22 @@ services:
 
 volumes:
   kdc-data:
-    name: ${CONTAINER_PREFIX}-kdc-data
+    name: ${CONTAINER_PREFIX:-unsetted_prefix}-kdc-data
   hbase-data:
-    name: ${CONTAINER_PREFIX}-hbase-data
+    name: ${CONTAINER_PREFIX:-unsetted_prefix}-hbase-data
   hbase-logs:
-    name: ${CONTAINER_PREFIX}-hbase-logs
+    name: ${CONTAINER_PREFIX:-unsetted_prefix}-hbase-logs
   vault-data:
-    name: ${CONTAINER_PREFIX}-vault_t3
+    name: ${CONTAINER_PREFIX:-unsetted_prefix}-vault_t3
 
 networks:
   production_network:
     driver: bridge
 #    enable_ipv6: true
     internal: false
-    name: ${CONTAINER_PREFIX}-production_network
+    name: ${CONTAINER_PREFIX:-unsetted_prefix}-production_network
   db_network:
     driver: bridge
 #    enable_ipv6: true
     internal: true
-    name: ${CONTAINER_PREFIX}-db_network
+    name: ${CONTAINER_PREFIX:-unsetted_prefix}-db_network
