@@ -108,6 +108,13 @@ jobs:
         [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
         [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
         
+        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 is empty"
+        [[  -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 is empty"
+        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 is empty"
+        [[  -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 is empty"
+        [[  -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 is empty"
+        [[  -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN is empty"
+        
         seal_status=$(sudo docker exec -i  vault vault status -format=json | jq -r '.sealed')
         if [[ "$seal_status" == "true" ]]; then
             echo "Vault запечатан. Начинаем процесс разблокировки..."
@@ -129,6 +136,12 @@ jobs:
         [[ ! -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 isn't empty"
         [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
         [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
+        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 is empty"
+        [[  -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 is empty"
+        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 is empty"
+        [[  -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 is empty"
+        [[  -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 is empty"
+        [[  -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN is empty"
         
         [[ -n "$VAULT_ROOT_TOKEN" ]] && sudo docker exec -i  vault vault login ${VAULT_ROOT_TOKEN} || echo "skip empty key VAULT_ROOT_TOKEN"
         sudo docker exec -i  vault vault secrets enable -path="$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME" kv
