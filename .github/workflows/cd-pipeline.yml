@@ -80,6 +80,13 @@ jobs:
         export VAULT_UNSEAL_KEY_5="${unseal_keys[4]}"
         # Сохраняем root-токен
         export VAULT_ROOT_TOKEN="$root_token"
+        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 isn't empty"
+        [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
+        [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
+
 
     - name: Add vault secrets config to env files.
       run: |
@@ -97,11 +104,15 @@ jobs:
         seal_status=$(sudo docker exec -i  vault vault status -format=json | jq -r '.sealed')
         if [[ "$seal_status" == "true" ]]; then
             echo "Vault запечатан. Начинаем процесс разблокировки..."
-            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_1"
-            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_2"
-            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_3"
+            [[ -n "$VAULT_UNSEAL_KEY_1" ]] && sudo docker exec -i  vault vault unseal ${VAULT_UNSEAL_KEY_1} || echo "skip empty key VAULT_UNSEAL_KEY_1"
+            [[ -n "$VAULT_UNSEAL_KEY_2" ]] && sudo docker exec -i  vault vault unseal ${VAULT_UNSEAL_KEY_2} || echo "skip empty key VAULT_UNSEAL_KEY_2"
+            [[ -n "$VAULT_UNSEAL_KEY_3" ]] && sudo docker exec -i  vault vault unseal ${VAULT_UNSEAL_KEY_3} || echo "skip empty key VAULT_UNSEAL_KEY_3"
         fi
         echo "Vault уже разблокирован."
+
+#            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_1"
+#            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_2"
+#            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_3"
 
     - name: Imitate secrets exists into vault.
       run: |        
