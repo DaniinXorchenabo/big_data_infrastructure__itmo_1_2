@@ -39,7 +39,7 @@ jobs:
     - name: Copy .env file
       run: |
           cp ./env/example.env ./env/.env
-          echo "VAULT_SECRETS_PATH=${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }} >>  ./env/.env
+          echo "VAULT_SECRETS_PATH=${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}" >>  ./env/.env
           echo "VAULT_SECRETS_NAME=${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}" >>  ./env/.env
 
           echo "CONTAINER_PREFIX=unittests" >>  ./env/.env
