@@ -87,7 +87,7 @@ jobs:
 
     - name: Add vault secrets config to env files.
       run: |
-        echo "VAULT_UNSEAL_KEY_1=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_1 }} >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_1=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_1 }}" >>  ./env/unittests.env
         echo "VAULT_UNSEAL_KEY_2=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_2 }}" >>  ./env/unittests.env
         echo "VAULT_UNSEAL_KEY_3=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_3 }}" >>  ./env/unittests.env
         echo "VAULT_UNSEAL_KEY_4=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_4 }}" >>  ./env/unittests.env
