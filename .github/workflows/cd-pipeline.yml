@@ -162,9 +162,9 @@ jobs:
     - name: Run tests
       run: |
         sudo docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d --force-recreate
-        sudo docker exec -it dl_labs pytest -c ./tests/pytest.ini
+        sudo docker exec -i dl_labs pytest -c ./tests/pytest.ini
         TEST_EXIT_CODE=$(sudo docker inspect dl_labs --format='{{.State.ExitCode}}')
-        sudo docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env down
+        sudo docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env down
         if [ "$TEST_EXIT_CODE" -ne 0 ]; then
               echo "Tests failed with exit code $TEST_EXIT_CODE"
               exit $TEST_EXIT_CODE
