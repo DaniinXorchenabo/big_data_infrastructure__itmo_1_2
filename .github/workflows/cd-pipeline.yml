@@ -139,6 +139,8 @@ jobs:
         sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_FILENAME" key="${{ secrets.AI_WEIGHTS_FILENAME }}"
         sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO_FILENAME" key="${{ secrets.AI_WEIGHTS_REPO_FILENAME }}"
 
+        sudo docker exec -i  vault vault kv get "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO_FILENAME"
+
 #        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
 #        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
 #        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 isn't empty"
