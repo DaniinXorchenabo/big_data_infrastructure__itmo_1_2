@@ -101,9 +101,9 @@ jobs:
         seal_status=$(sudo docker exec -i  vault vault status -format=json | jq -r '.sealed')
         if [[ "$seal_status" == "true" ]]; then
             echo "Vault запечатан. Начинаем процесс разблокировки..."
-            sudo docker exec -i  vault vault unseal ${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_1 }}
-            sudo docker exec -i  vault vault unseal ${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_2 }} 
-            sudo docker exec -i  vault vault unseal ${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_3 }}
+            sudo docker exec -i  vault vault operator unseal "${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_1 }}"
+            sudo docker exec -i  vault vault operator unseal "${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_2 }}"
+            sudo docker exec -i  vault vault operator unseal "${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_3 }}"
         fi
         echo "Vault уже разблокирован."
 #        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
