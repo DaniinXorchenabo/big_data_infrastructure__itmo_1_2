@@ -161,7 +161,7 @@ jobs:
 
     - name: Run tests
       run: |
-        sudo docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d
+        sudo docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d --force-recreate
         sudo docker exec -it dl_labs pytest -c ./tests/pytest.ini
         TEST_EXIT_CODE=$(sudo docker inspect dl_labs --format='{{.State.ExitCode}}')
         sudo docker-compose -f ./docker/dev.docker-compose.yml -f ./docker/test.docker-compose.yml --env-file ./env/unittests.env down
