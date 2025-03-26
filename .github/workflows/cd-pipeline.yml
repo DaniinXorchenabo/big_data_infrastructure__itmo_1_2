@@ -31,15 +31,16 @@ jobs:
         sudo apt-get install -y docker-compose
   
     - name: Set environ variables
+      id: set_env_for_docker_run
       run: |
-        export VAULT_SECRETS_PATH="test"
-        export VAULT_SECRETS_NAME="unittests"
+        echo "VAULT_SECRETS_PATH=test" >> $GITHUB_OUTPUT
+        echo "VAULT_SECRETS_NAME=unittests" >> $GITHUB_OUTPUT
 
     - name: Copy .env file
       run: |
           cp ./env/example.env ./env/.env
-          echo "VAULT_SECRETS_PATH=$VAULT_SECRETS_PATH" >>  ./env/.env
-          echo "VAULT_SECRETS_NAME=$VAULT_SECRETS_NAME" >>  ./env/.env
+          echo "VAULT_SECRETS_PATH=${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }} >>  ./env/.env
+          echo "VAULT_SECRETS_NAME=${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}" >>  ./env/.env
 
           echo "CONTAINER_PREFIX=unittests" >>  ./env/.env
           echo "DB_HOST=hbase-rest" >>  ./env/.env
@@ -51,6 +52,7 @@ jobs:
         sudo docker-compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull vault
 
     - name: Get Vault tokens
+      id: vault_init
       run: |
         sudo docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d --build vault
         sudo docker exec -i  vault mkdir -p /vault/data
@@ -71,88 +73,85 @@ jobs:
         # Извлекаем unseal-ключи (массив) и root-токен с помощью jq
         readarray -t unseal_keys < <(echo "$init_output" | jq -r '.unseal_keys_b64[]')
         root_token=$(echo "$init_output" | jq -r '.root_token')
-
-        # Сохраняем первые три unseal-ключа в переменные окружения
-        export VAULT_UNSEAL_KEY_1="${unseal_keys[0]}"
-        export VAULT_UNSEAL_KEY_2="${unseal_keys[1]}"
-        export VAULT_UNSEAL_KEY_3="${unseal_keys[2]}"
-        export VAULT_UNSEAL_KEY_4="${unseal_keys[3]}"
-        export VAULT_UNSEAL_KEY_5="${unseal_keys[4]}"
-        # Сохраняем root-токен
-        export VAULT_ROOT_TOKEN="$root_token"
-        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
-        [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
-
+        
+        echo "VAULT_UNSEAL_KEY_1=${unseal_keys[0]}" >> $GITHUB_OUTPUT
+        echo "VAULT_UNSEAL_KEY_2=${unseal_keys[1]}" >> $GITHUB_OUTPUT
+        echo "VAULT_UNSEAL_KEY_3=${unseal_keys[2]}" >> $GITHUB_OUTPUT
+        echo "VAULT_UNSEAL_KEY_4=${unseal_keys[3]}" >> $GITHUB_OUTPUT
+        echo "VAULT_UNSEAL_KEY_5=${unseal_keys[4]}" >> $GITHUB_OUTPUT
+        echo "VAULT_ROOT_TOKEN=$root_token" >> $GITHUB_OUTPUT
+        
+        export unseal_keys=""
+        export root_token=""
+        export init_output=""
 
     - name: Add vault secrets config to env files.
       run: |
-        echo "VAULT_UNSEAL_KEY_1=$VAULT_UNSEAL_KEY_1" >>  ./env/unittests.env
-        echo "VAULT_UNSEAL_KEY_2=$VAULT_UNSEAL_KEY_2" >>  ./env/unittests.env
-        echo "VAULT_UNSEAL_KEY_3=$VAULT_UNSEAL_KEY_3" >>  ./env/unittests.env
-        echo "VAULT_UNSEAL_KEY_4=$VAULT_UNSEAL_KEY_4" >>  ./env/unittests.env
-        echo "VAULT_UNSEAL_KEY_5=$VAULT_UNSEAL_KEY_5" >>  ./env/unittests.env
-        echo "VAULT_ROOT_TOKEN=$VAULT_ROOT_TOKEN" >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_1=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_1 }} >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_2=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_2 }}" >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_3=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_3 }}" >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_4=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_4 }}" >>  ./env/unittests.env
+        echo "VAULT_UNSEAL_KEY_5=${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_5 }}" >>  ./env/unittests.env
+        echo "VAULT_ROOT_TOKEN=${{ steps.vault_init.outputs.VAULT_ROOT_TOKEN }}" >>  ./env/unittests.env
 
         cp -f ./env/unittests.env ./env/.env
 
     - name: Unseal vault.
       run: |  
-        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
-        [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
-        
-        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 is empty"
-        [[  -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 is empty"
-        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 is empty"
-        [[  -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 is empty"
-        [[  -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 is empty"
-        [[  -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN is empty"
-        
         seal_status=$(sudo docker exec -i  vault vault status -format=json | jq -r '.sealed')
         if [[ "$seal_status" == "true" ]]; then
             echo "Vault запечатан. Начинаем процесс разблокировки..."
-            [[ -n "$VAULT_UNSEAL_KEY_1" ]] && sudo docker exec -i  vault vault unseal ${VAULT_UNSEAL_KEY_1} || echo "skip empty key VAULT_UNSEAL_KEY_1"
-            [[ -n "$VAULT_UNSEAL_KEY_2" ]] && sudo docker exec -i  vault vault unseal ${VAULT_UNSEAL_KEY_2} || echo "skip empty key VAULT_UNSEAL_KEY_2"
-            [[ -n "$VAULT_UNSEAL_KEY_3" ]] && sudo docker exec -i  vault vault unseal ${VAULT_UNSEAL_KEY_3} || echo "skip empty key VAULT_UNSEAL_KEY_3"
+            sudo docker exec -i  vault vault unseal ${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_1 }}
+            sudo docker exec -i  vault vault unseal ${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_2 }} 
+            sudo docker exec -i  vault vault unseal ${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_3 }}
         fi
         echo "Vault уже разблокирован."
+#        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
+#        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
+#        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 isn't empty"
+#        [[ ! -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 isn't empty"
+#        [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
+#        [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
+#
+#        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 is empty"
+#        [[  -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 is empty"
+#        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 is empty"
+#        [[  -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 is empty"
+#        [[  -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 is empty"
+#        [[  -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN is empty"
 
+
+#[[ -n "$VAULT_UNSEAL_KEY_1" ]] &&
 #            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_1"
 #            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_2"
 #            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_3"
 
     - name: Imitate secrets exists into vault.
       run: |  
-        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 isn't empty"
-        [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
-        [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
-        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 is empty"
-        [[  -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 is empty"
-        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 is empty"
-        [[  -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 is empty"
-        [[  -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 is empty"
-        [[  -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN is empty"
-        
-        [[ -n "$VAULT_ROOT_TOKEN" ]] && sudo docker exec -i  vault vault login ${VAULT_ROOT_TOKEN} || echo "skip empty key VAULT_ROOT_TOKEN"
-        sudo docker exec -i  vault vault secrets enable -path="$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME" kv
+        sudo docker exec -i  vault vault login ${{ steps.vault_init.outputs.VAULT_ROOT_TOKEN }}
+        sudo docker exec -i  vault vault secrets enable -path="${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}" kv
 
-        sudo docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_PORT" key="$DB_PORT"
-        sudo docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_LOGIN" key="$DB_LOGIN"
-        sudo docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_PASSWORD" key="$DB_PASSWORD"
-        sudo docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/JUPYTER_TOKEN" key="$JUPYTER_TOKEN"
-        sudo docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/AI_WEIGHTS_REPO" key="$AI_WEIGHTS_REPO"
-        sudo docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/AI_WEIGHTS_FILENAME" key="$AI_WEIGHTS_FILENAME"
-        sudo docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/AI_WEIGHTS_REPO_FILENAME" key="$AI_WEIGHTS_REPO_FILENAME"
+        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/DB_PORT" key="${{ secrets.DB_PORT }}"
+        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/DB_LOGIN" key="${{ secrets.DB_LOGIN }}"
+        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/DB_PASSWORD" key="${{ secrets.DB_PASSWORD }}"
+        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/JUPYTER_TOKEN" key="${{ secrets.JUPYTER_TOKEN }}"
+        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO" key="${{ secrets.AI_WEIGHTS_REPO }}"
+        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_FILENAME" key="${{ secrets.AI_WEIGHTS_FILENAME }}"
+        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO_FILENAME" key="${{ secrets.AI_WEIGHTS_REPO_FILENAME }}"
+
+#        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
+#        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
+#        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 isn't empty"
+#        [[ ! -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 isn't empty"
+#        [[ ! -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 isn't empty"
+#        [[ ! -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN isn't empty"
+#        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 is empty"
+#        [[  -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 is empty"
+#        [[  -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_3 is empty"
+#        [[  -z "${VAULT_UNSEAL_KEY_4// }" ]] && echo "VAULT_UNSEAL_KEY_4 is empty"
+#        [[  -z "${VAULT_UNSEAL_KEY_5// }" ]] && echo "VAULT_UNSEAL_KEY_5 is empty"
+#        [[  -z "${VAULT_ROOT_TOKEN// }" ]] && echo "VAULT_ROOT_TOKEN is empty"
+
 
     - name: Pull images from Docker Compose
       run: |
@@ -177,25 +176,3 @@ jobs:
     - name: cleanup
       run: |
         - rm -rf ./*
-        export VAULT_SECRETS_PATH=""
-        export VAULT_SECRETS_NAME=""
-        export VAULT_UNSEAL_KEY_1=""
-        export VAULT_UNSEAL_KEY_2=""
-        export VAULT_UNSEAL_KEY_3=""
-        export VAULT_UNSEAL_KEY_4=""
-        export VAULT_UNSEAL_KEY_5=""
-        
-        export unseal_keys=""
-        export root_token=""
-        export init_output=""
-        export init_output=""
-        export init_output=""
-        export init_output=""
-        
-        export DB_PORT=""
-        export DB_LOGIN=""
-        export DB_PASSWORD=""
-        export JUPYTER_TOKEN=""
-        export AI_WEIGHTS_REPO=""
-        export AI_WEIGHTS_FILENAME=""
-        export AI_WEIGHTS_REPO_FILENAME=""
