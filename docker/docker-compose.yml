@@ -159,12 +159,12 @@ volumes:
 
 networks:
   production_network:
-    driver: bridge
+    driver: "bridge"
 #    enable_ipv6: true
     internal: false
-    name: ${CONTAINER_PREFIX:-unsetted_prefix}-production_network
+    name: "${CONTAINER_PREFIX:-unsetted_prefix}-production-network"
   db_network:
-    driver: bridge
+    driver: "bridge"
 #    enable_ipv6: true
     internal: true
-    name: ${CONTAINER_PREFIX:-unsetted_prefix}-db_network
+    name: "${CONTAINER_PREFIX:-unsetted_prefix}-db-network"

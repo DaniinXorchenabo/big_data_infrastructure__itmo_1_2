@@ -26,9 +26,10 @@ jobs:
       uses: docker/setup-buildx-action@v2
 
     - name: Set up Docker Compose
-      run: |
+      run: | 
         sudo apt-get update
-        sudo apt-get install -y docker-compose
+        sudo apt-get install -y docker-compose=2.34.0
+        sudo docker -v && sudo docker-compose -v
   
     - name: Set environ variables
       id: set_env_for_docker_run
