@@ -45,6 +45,12 @@ class Config(object):
         self.DB_CONN_URL = f'http://{self.DB_HOST}:{self.DB_PORT}'
         self._DB_PROPERTIES_FILEPATH = os.path.join(self.ROOT_DIR, 'docker', 'hbase', 'conf', 'hbase-rest-users.properties')
 
+        self.KAFKA_HOST = self.load_variable('KAFKA_HOST')
+        self.KAFKA_PORT = self.load_variable('KAFKA_PORT')
+        self.KAFKA_TOPIC = self.load_variable('KAFKA_TOPIC')
+        self.KAFKA_PRODUCER = self.load_variable('KAFKA_PRODUCER')
+        self.KAFKA_CONSUMER = self.load_variable('KAFKA_CONSUMER')
+
         with open(self._DB_PROPERTIES_FILEPATH, 'w') as f:
             print(f'{self.DB_LOGIN}={self.DB_PASSWORD}', file=f)
 
