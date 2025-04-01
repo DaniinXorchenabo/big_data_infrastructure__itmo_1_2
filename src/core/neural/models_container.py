@@ -1,4 +1,5 @@
 import dataclasses
+import os.path
 from typing import List, Tuple, Type, Any
 import gc
 
@@ -14,7 +15,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import TensorBoardLogger
 import torchmetrics
 
-from src.configs.config import CONFIG
+from src.configs.config import CONFIG, LOGGER
 from src.core.neural.models.fashion_mnist_lite_model import LightweightFashionMNIST
 from src.utils.singleton import singleton
 
@@ -34,6 +35,7 @@ class ModelVenv:
 class ModelsContainer(object):
 
     def __init__(self):
+
         self.fashion_mnist_lit_model = ModelVenv(
             model_cl=LightweightFashionMNIST,
             weights_path=CONFIG.fashion_mnist_lit_model_weights,
@@ -56,13 +58,19 @@ class ModelsContainer(object):
     @staticmethod
     def model_load(venv: ModelVenv):
         # if os.path.isfile(CONFIG.MODEL_DIR):
-        model_path = hf_hub_download(
-                repo_id=venv.weights_repo,
-                filename=venv.weights_repo_path,
-                # force_download=True,
-                local_dir=CONFIG.WEIGHTS_DIR,
-            )
+        LOGGER.info(CONFIG.KAFKA_PRODUCER)
+        if CONFIG.KAFKA_PRODUCER:
+            model_path = hf_hub_download(
+                    repo_id=venv.weights_repo,
+                    filename=venv.weights_repo_path,
+                    # force_download=True,
+                    local_dir=CONFIG.WEIGHTS_DIR,
+                )
+        else:
+            model_path = os.path.join(CONFIG.WEIGHTS_DIR, CONFIG.AI_WEIGHTS_FILENAME)
+        LOGGER.info(model_path)
         venv.weights_path = model_path
+        LOGGER.info(venv.weights_path)
             # source_dir = model_path
             # target_dir = venv.weights_path
             # shutil.move(source_dir, target_dir)
