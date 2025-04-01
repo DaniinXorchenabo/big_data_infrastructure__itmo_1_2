@@ -19,7 +19,7 @@ from src.configs.config import CONFIG
 from src.core.db.db_controller import DBController
 from src.core.db.init_db import init_db_conn
 from src.web.depends.db_depends import get_db
-from src.web.events.init import main_lifespan
+from src.web.events.consumer_init import main_lifespan
 from src.web.init_app import init_producer
 from tests.configs import BASE_URL
 
