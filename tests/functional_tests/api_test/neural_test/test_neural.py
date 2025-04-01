@@ -11,5 +11,4 @@ async def test_predict(my_client: AsyncClient, neural_predictions: (list[Respons
     responses, images = neural_predictions
     for response in responses:
         assert response.status_code == 200
-        assert all(i in response.json() for i in ['res_id', 'predicted_class'])
-        assert isinstance(response.json()["predicted_class"], int)
+        assert all(i in response.json() for i in ['res_id',])

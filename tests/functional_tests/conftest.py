@@ -20,7 +20,7 @@ from src.core.db.db_controller import DBController
 from src.core.db.init_db import init_db_conn
 from src.web.depends.db_depends import get_db
 from src.web.events.init import main_lifespan
-from src.web.init_app import init_app
+from src.web.init_app import init_producer
 from tests.configs import BASE_URL
 
 
@@ -47,7 +47,7 @@ def event_loop():
 def create_app():
 
     app = FastAPI(lifespan=main_lifespan)
-    app = init_app(app)
+    app = init_producer(app)
     return app
 
 
@@ -117,7 +117,7 @@ async def neural_predictions(my_client: AsyncClient, images):
     results = []
     for img_data in images:
         files = {"file": ("test.png", img_data, "image/png")}
-        response = await my_client.post("/neural/predict", files=files)
+        response = await my_client.post("/neural/request_predict", files=files)
         results.append(response)
     yield results, images
 
