@@ -28,7 +28,7 @@ jobs:
     - name: Set up Docker Compose
       run: | 
         sudo apt-get update
-        sudo apt-get install -y docker-compose=2.34.0
+        sudo apt-get install -y docker-compose
         sudo docker -v && sudo docker-compose -v
   
     - name: Set environ variables
@@ -50,12 +50,12 @@ jobs:
 
     - name: Pull vault image from Docker Compose
       run: |
-        sudo docker-compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull vault
+        sudo docker compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull vault
 
     - name: Get Vault tokens
       id: vault_init
       run: |
-        sudo docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d --build vault
+        sudo docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d --build vault
         sudo docker exec -i  vault mkdir -p /vault/data
         sudo docker exec -i  vault chown -R vault /vault/data
         echo "Ожидание доступности Vault..."
@@ -158,7 +158,7 @@ jobs:
 
     - name: Pull images from Docker Compose
       run: |
-        sudo docker-compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull
+        sudo docker compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull
 
     - name: Run tests
       run: |
@@ -174,7 +174,7 @@ jobs:
 #        fi
     - name: Shutdown Docker Compose
       run: |
-        sudo docker-compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  down
+        sudo docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  down
 
     - name: cleanup
       run: |
