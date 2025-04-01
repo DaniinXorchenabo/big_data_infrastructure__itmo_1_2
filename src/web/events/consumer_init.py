@@ -8,7 +8,7 @@ from src.core.neural.models_container import MODELS_CONTAINER
 
 
 @asynccontextmanager
-async def main_lifespan(app: FastAPI):
+async def consumer_lifespan(app: FastAPI):
 
     # Load the ML model
     async with (ml_lifespan(app)):
@@ -17,7 +17,7 @@ async def main_lifespan(app: FastAPI):
                 yield
 
 @contextmanager
-def main_lifespan_sync(app: FastAPI):
+def consumer_lifespan_sync(app: FastAPI):
 
     # Load the ML model
     with (ml_lifespan_sync(app)):
@@ -40,6 +40,5 @@ def ml_lifespan_sync(app: FastAPI):
     with MODELS_CONTAINER as container:
         yield
 
-def init_base_events(app: FastAPI):
-    return app
+
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from src.web.api.init_api import init_base_api, init_producer_api, init_consumer_api
-from src.web.events.init import init_base_events
+from src.web.events.common_init import init_base_events
 
 
 def init_app_as_once(app: FastAPI):

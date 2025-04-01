@@ -6,14 +6,13 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import FastAPI, File, UploadFile, Depends
-from PIL import Image
-import torch
+# from PIL import Image
+
 from fastapi.routing import APIRouter
 
 from src.configs.config import CONFIG
 from src.core.db.db_controller import DBController
 from src.core.kafka.kafka_controller import KafkaController
-from src.core.neural.models_container import MODELS_CONTAINER
 from src.web.depends.db_depends import get_db
 from src.web.depends.kafka_depends import get_kafka
 
@@ -31,7 +30,6 @@ async def request_predict(
     # Читаем содержимое файла
     contents = await file.read()
     encoded_data = base64.b64encode(contents).decode('utf-8')
-    # Загружаем изображение через PIL
     request_kafka_id = str(uuid4())
     kafka_conn.send({
         "request_kafka_id": request_kafka_id,

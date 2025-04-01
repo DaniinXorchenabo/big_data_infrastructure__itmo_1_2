@@ -1,8 +1,6 @@
 import os
 from collections.abc import Callable
 
-import torch
-
 from src.configs import vault
 from src.configs.vault import VAULT_READER, VaultConfig
 from src.utils.logger.logger import logController
@@ -14,12 +12,19 @@ from src.utils.singleton import singleton
 class Config(object):
     def __init__(self, vault: VaultConfig, LOGGER):
         self.LOGGER = LOGGER
-        self.DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.variable_source = {
             'vault': vault.get_vault_secrets,
             'environ variables': os.environ,
         }
+
+        # =========================
+        self.DOCKER_USE_GPU = self.bool_var(self.load_variable('DOCKER_USE_GPU'))
+        if self.DOCKER_USE_GPU:
+            import torch
+            self.DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        else:
+            self.DEVICE = 'cpu'
 
         self.ROOT_DIR = vault.ROOT_DIR
         self.LOGS_PATH = vault.LOGS_PATH
