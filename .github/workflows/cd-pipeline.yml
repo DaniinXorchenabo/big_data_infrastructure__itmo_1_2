@@ -178,4 +178,4 @@ jobs:
 
     - name: cleanup
       run: |
-        - rm -rf ./*
+        rm -rf ./*
