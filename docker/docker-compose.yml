@@ -2,15 +2,15 @@
 
 services:
   dl:
-    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cpu-consumer-latest
     build:
       context: ..
       dockerfile: ./docker/lighting.Dockerfile
-      target: backend
+      target: consumer_production_build
       args:
-        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-useless}
 
-    container_name: dl_labs
+    container_name: consumer
     depends_on:
       - hbase-rest
       - vault
@@ -21,6 +21,7 @@ services:
       - VAULT_HOST=vault
       - KAFKA_PRODUCER=false
       - KAFKA_CONSUMER=true
+      - DOCKER_USE_GPU=false
     env_file:
       - ../env/.env
     volumes: #!override
@@ -34,21 +35,15 @@ services:
     networks:
       - db_network
       - production_network
-#    healthcheck:
-#      test: curl --fail http://dl:${BACKEND_PORT:-8000}/healthcheck || exit 1
-#      interval: 10s
-#      timeout: 10s
-#      start_period: 10s
-#      retries: 10
 
   producer:
-    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cpu-producer-latest
     build:
       context: ..
       dockerfile: ./docker/lighting.Dockerfile
-      target: backend
+      target: producer_production_build
       args:
-        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-useless}
 
     container_name: producer
     depends_on:
@@ -56,11 +51,12 @@ services:
       - vault
       - kafka
     environment:
-      - BACKEND_HOST_URL=dl
+      - BACKEND_HOST_URL=producer
       - DB_HOST=hbase-rest
       - VAULT_HOST=vault
       - KAFKA_PRODUCER=true
       - KAFKA_CONSUMER=false
+      - DOCKER_USE_GPU=false
     env_file:
       - ../env/.env
     volumes: #!override
