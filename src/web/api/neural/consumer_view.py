@@ -42,7 +42,8 @@ def predict(
         outputs = MODELS_CONTAINER.fashion_mnist_lit_model.model(img_tensor.to(CONFIG.DEVICE))
         delta_time = time() - delta_time
         predicted_class = torch.argmax(outputs, dim=1).item()
-    db_conn.insert_row('user_logs', row_key=str(request_id), data={
+    db_conn.insert_row('user_logs', row_key=str(request_id),
+                       data={
         "datetime": f"{datetime.utcnow().strftime('%Y_%m_%d__%H_%M_%S')}",
         "result": str(predicted_class),
         'calc_time': str(delta_time),
