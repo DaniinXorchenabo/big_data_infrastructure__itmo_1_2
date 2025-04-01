@@ -172,6 +172,9 @@ jobs:
             else
               echo "Tests passed successfully."
         fi
+        if: failure()
+        sudo docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env logs
+
     - name: Shutdown Docker Compose
       run: |
         sudo docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  down
