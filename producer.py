@@ -1,9 +1,9 @@
 import os
 
 from src.configs.config import CONFIG
-from src.producer import producer
 import uvicorn
-# print(os.getcwd())
+
+from src.producer import producer
 
 
 if __name__ == '__main__':

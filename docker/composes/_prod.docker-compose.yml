@@ -7,8 +7,8 @@ services:
     restart: unless-stopped
     image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
     build:
-      context: ..
-      dockerfile: ./docker/lighting.Dockerfile
+      context: ../..
+      dockerfile: ../lighting.Dockerfile
       target: backend
       args:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}

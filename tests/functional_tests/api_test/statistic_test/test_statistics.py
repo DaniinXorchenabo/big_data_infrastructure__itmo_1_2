@@ -22,11 +22,6 @@ async def test_get_all_results(my_client: AsyncClient, neural_predictions: (list
     assert response.status_code == 200
     response_data = {i['id']: i for i in response.json()}
 
-    # assert len(response.json()) == len(response_data) == len(data) ==len(neural_predictions)
-    # assert set(data) == set(response_data)
-    # assert all(str(rd['result']) == str(d['predicted_class']) for key in response_data if (rd:= response_data[key]) and (d:=data[key]))
-    # assert all(set(v) == {'id', "datetime", "result", 'calc_time',} for k, v in response_data.items())
-
 
 @pytest.mark.asyncio(scope="session")
 async def test_get_res_by_id_with_empty_table(my_client: AsyncClient, db_conn: DBController):
@@ -42,16 +37,5 @@ async def test_get_res_by_id(my_client: AsyncClient, neural_predictions: (list[R
         response = await my_client.get(f"/statistic/res_id/{res_data['res_id']}")
         assert response.status_code == 200
         assert set(response.json()) == {'id', "datetime", "result", 'calc_time',}
-        assert response.json()['id'] == res_data['res_id']
-        assert str(response.json()['result']) == str(res_data['predicted_class'])
-
-
-@pytest.mark.asyncio(scope="session")
-async def test_get_res_by_id(my_client: AsyncClient, neural_predictions: (list[Response], list[bytes])):
-    data = [response.json() for response in neural_predictions[0]]
-    for res_data in data:
-        response = await my_client.get(f"/statistic/res_id/{res_data['res_id']}")
-        assert response.status_code == 200
-        assert set(response.json()) == {'id', 'request_id', "datetime", "result", 'calc_time',}
         assert response.json()['id'] == res_data['res_id']
         # assert str(response.json()['result']) == str(res_data['predicted_class'])

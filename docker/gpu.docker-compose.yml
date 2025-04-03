@@ -2,11 +2,19 @@ version: '3.9'
 
 services:
   dl:
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu12-consumer-latest
+    build:
+      context: ..
+      dockerfile: ./docker/lighting.Dockerfile
+      target: consumer_production_build_cuda
+      args:
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
     environment:
       - DISPLAY=:0
       - WAYLAND_DISPLAY
       - XDG_RUNTIME_DIR
       - PULSE_SERVER
+      - DOCKER_USE_GPU=true
     volumes: #!override
       - /tmp/.X11-unix:/tmp/.X11-unix
       - /mnt/wslg:/mnt/wslg

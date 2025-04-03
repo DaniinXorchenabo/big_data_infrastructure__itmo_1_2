@@ -28,12 +28,14 @@ docker exec -i  vault vault login $VAULT_ROOT_TOKEN
 
 #docker exec -i  vault vault secrets enable -path="$VAULT_SECRETS_PATH" kv
 #docker exec -i  vault vault secrets enable -path="$VAULT_SECRETS_PATH/$VAULT_SECRETS_NAME "kv
-docker exec -i  vault vault secrets enable -path="$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME" kv
+docker exec -i  vault vault secrets enable -path="${VAULT_SECRETS_PATH}/data/${VAULT_SECRETS_NAME}" kv
 
-docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_PORT" key="$DB_PORT"
-docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_LOGIN" key="$DB_LOGIN"
-docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/DB_PASSWORD" key="$DB_PASSWORD"
-docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/JUPYTER_TOKEN" key="$JUPYTER_TOKEN"
-docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/AI_WEIGHTS_REPO" key="$AI_WEIGHTS_REPO"
-docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/AI_WEIGHTS_FILENAME" key="$AI_WEIGHTS_FILENAME"
-docker exec -i  vault vault kv put "$VAULT_SECRETS_PATH/data/$VAULT_SECRETS_NAME/AI_WEIGHTS_REPO_FILENAME" key="$AI_WEIGHTS_REPO_FILENAME"
+docker exec -i  vault vault kv put "${VAULT_SECRETS_PATH}/data/${VAULT_SECRETS_NAME}/DB_PORT" key="$DB_PORT"
+docker exec -i  vault vault kv put "${VAULT_SECRETS_PATH}/data/${VAULT_SECRETS_NAME}/DB_LOGIN" key="$DB_LOGIN"
+docker exec -i  vault vault kv put "${VAULT_SECRETS_PATH}/data/${VAULT_SECRETS_NAME}/DB_PASSWORD" key="$DB_PASSWORD"
+docker exec -i  vault vault kv put "${VAULT_SECRETS_PATH}/data/${VAULT_SECRETS_NAME}/JUPYTER_TOKEN" key="$JUPYTER_TOKEN"
+docker exec -i  vault vault kv put "${VAULT_SECRETS_PATH}/data/${VAULT_SECRETS_NAME}/AI_WEIGHTS_REPO" key="$AI_WEIGHTS_REPO"
+docker exec -i  vault vault kv put "${VAULT_SECRETS_PATH}/data/${VAULT_SECRETS_NAME}/AI_WEIGHTS_FILENAME" key="$AI_WEIGHTS_FILENAME"
+docker exec -i  vault vault kv put "${VAULT_SECRETS_PATH}/data/${VAULT_SECRETS_NAME}/AI_WEIGHTS_REPO_FILENAME" key="$AI_WEIGHTS_REPO_FILENAME"
+
+sleep 2h

@@ -73,8 +73,18 @@ jobs:
 
       - name: Build Docker images using Docker Compose
         run: |
-          docker-compose -f ./docker/docker-compose.yml --env-file ./env/.env build
+          export DOCKER_BUILDKIT=1
+          docker compose -f ./docker/docker-compose.yml --env-file ./env/.env build
+          docker compose -f ./docker/docker-compose.yml -f ./docker/gpu.docker-compose.yml --env-file ./env/.env build
+          docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittest.env build
+          docker compose -f ./docker/docker-compose.yml -f ./docker/gpu.docker-compose.yml -f ./docker/composes/gpu.dev.docker-compose.yml --env-file ./env/.env build
+          docker compose -f ./docker/docker-compose.yml -f ./docker/composes/cpu.dev.docker-compose.yml --env-file ./env/.env build
+
 
       - name: Push Docker images using Docker Compose
         run: |
-          docker-compose -f ./docker/docker-compose.yml --env-file ./env/.env push
+          docker compose -f ./docker/docker-compose.yml --env-file ./env/.env push
+          docker compose -f ./docker/docker-compose.yml -f ./docker/gpu.docker-compose.yml --env-file ./env/.env push
+          docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittest.env push
+          docker compose -f ./docker/docker-compose.yml -f ./docker/gpu.docker-compose.yml -f ./docker/composes/gpu.dev.docker-compose.yml --env-file ./env/.env push
+          docker compose -f ./docker/docker-compose.yml -f ./docker/composes/cpu.dev.docker-compose.yml --env-file ./env/.env push

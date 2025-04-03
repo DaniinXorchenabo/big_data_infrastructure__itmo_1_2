@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  producer:
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cpu-dev-latest
+    build:
+      target: dev_build
+
+    command: ./docker/before_learn.sh
+    volumes:
+      - type: bind
+        source: ../docker/jupyter_config
+        target: /root/.jupyter/
+      - type: bind
+        source: ..
+        target: /workspace/NN
