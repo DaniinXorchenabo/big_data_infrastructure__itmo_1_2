@@ -4,4 +4,4 @@ pytest-trio
 pytest-cov
 pytest-asyncio==0.25.3
 async-lru
-
+pillow

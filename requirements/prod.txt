@@ -9,3 +9,4 @@ aiohttp
 huggingface_hub
 hvac
 kafka-python
+python-multipart
