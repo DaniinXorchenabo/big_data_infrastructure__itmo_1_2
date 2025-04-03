@@ -158,14 +158,14 @@ jobs:
 
     - name: Pull images from Docker Compose
       run: |
-        sudo docker compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull
+        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml  --env-file ./env/unittests.env  pull
 
     - name: Run tests
       run: |
-        sudo docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d --force-recreate
+        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env  up  -d --force-recreate
         sudo docker exec -i producer pytest -vv -c ./tests/pytest.ini
         TEST_EXIT_CODE=$(sudo docker inspect producer --format='{{.State.ExitCode}}')
-        sudo docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env down
+        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env down
         if [ "$TEST_EXIT_CODE" -ne 0 ]; then
               echo "Tests failed with exit code $TEST_EXIT_CODE"
               exit $TEST_EXIT_CODE
@@ -173,11 +173,11 @@ jobs:
               echo "Tests passed successfully."
         fi
         if: failure()
-        sudo docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env logs
+        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env logs
 
     - name: Shutdown Docker Compose
       run: |
-        sudo docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  down
+        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env  down
 
     - name: cleanup
       run: |
