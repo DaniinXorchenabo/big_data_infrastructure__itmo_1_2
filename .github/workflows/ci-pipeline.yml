@@ -73,6 +73,7 @@ jobs:
 
       - name: Build Docker images using Docker Compose
         run: |
+          export DOCKER_BUILDKIT=1
           docker compose -f ./docker/docker-compose.yml --env-file ./env/.env build
           docker compose -f ./docker/docker-compose.yml -f ./docker/gpu.docker-compose.yml --env-file ./env/.env build
           docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittest.env build
