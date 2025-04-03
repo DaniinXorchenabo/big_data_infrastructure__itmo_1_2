@@ -53,6 +53,7 @@ class Config(object):
         self.KAFKA_HOST = self.load_variable('KAFKA_HOST')
         self.KAFKA_PORT = self.load_variable('KAFKA_PORT')
         self.KAFKA_TOPIC = self.load_variable('KAFKA_TOPIC')
+        self.KAFKA_PARTITION_COUNT = int(self.load_variable('KAFKA_PARTITION_COUNT'))
         self.KAFKA_PRODUCER = self.load_variable('KAFKA_PRODUCER')
         self.KAFKA_CONSUMER = self.load_variable('KAFKA_CONSUMER')
 

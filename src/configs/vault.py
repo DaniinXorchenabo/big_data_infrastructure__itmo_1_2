@@ -1,4 +1,5 @@
 import os
+import traceback
 from datetime import datetime
 
 import hvac
@@ -85,12 +86,19 @@ class VaultConfig(object):
 
     # Функция для разблокировки хранилища
     def unseal_vault(self):
-        for key in self.VAULT_UNSEAL_KEYS:
-            if key is None:
+        for ind, key in enumerate(self.VAULT_UNSEAL_KEYS, 1):
+            if key is None or key == '':
+                self.logger.info(f"unseal-ключ # {ind} пустой.")
                 continue
             if self._vault_client.sys.is_sealed():
-                self._vault_client.sys.submit_unseal_key(key)
-                self.logger.info("Применён unseal-ключ.")
+                try:
+                    self._vault_client.sys.submit_unseal_key(key)
+                    self.logger.info(f"Применён unseal-ключ # {ind}.")
+                except hvac.exceptions.InvalidRequest as e:
+                    self.logger.warn(f"Применение unseal-ключа # {ind} прошло неудачно.")
+                    self.logger.warn(e)
+                    self.logger.debug(traceback.format_exc())
+                    continue
             else:
                 self.logger.info("Хранилище уже разблокировано.")
                 break
