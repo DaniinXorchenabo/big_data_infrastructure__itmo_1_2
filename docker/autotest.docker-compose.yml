@@ -10,3 +10,7 @@ services:
       args:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-useless}
 
+    volumes:
+      - type: bind
+        source: ..
+        target: /workspace/NN

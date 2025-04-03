@@ -179,31 +179,9 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r /workspace/${REQUIREMENTS_FILE}
 
 
-# ====! final builds !=====
-
-FROM cudnn_base-amd64 as draft_base_build_cuda
-
-LABEL authors="daniinxorchenabo"
-
-RUN mkdir -p /workspace/NN
-WORKDIR /workspace/NN
-
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 build-essential curl  -y --fix-missing
-
-
-FROM draft_base_build_cuda as dev_build_cuda
-
-COPY --from=neural_libs_installer_cuda /wheels /neural_wheels
-RUN pip install --no-cache /neural_wheels/*  \
-    && python -c """import nltk;nltk.download('popular');nltk.download('punkt');nltk.download('stopwords');nltk.download('averaged_perceptron_tagger_eng')"""  \
-    && pip cache purge
-
-CMD ["./docker/before_learn.sh"]
-
-
-
 # ========! without CUDA !=======
 
+# =====! Lib installers !=====
 FROM base  as neural_libs_installer
 
 RUN apt-get update  \
@@ -263,7 +241,11 @@ WORKDIR /workspace/NN
 FROM final_base_build as dev_build
 
 COPY --from=neural_libs_installer /wheels /neural_wheels
+COPY --from=web_libs_installer /wheels /web_wheels
+COPY --from=autotest_libs_installer /wheels /autotest_wheels
 RUN pip install --no-cache /neural_wheels/*  \
+    && pip install --no-cache /web_wheels/*  \
+    && pip install --no-cache /autotest_wheels/*  \
     && python -c """import nltk;nltk.download('popular');nltk.download('punkt');nltk.download('stopwords');nltk.download('averaged_perceptron_tagger_eng')"""  \
     && pip cache purge
 
@@ -299,16 +281,21 @@ COPY --from=autotest_libs_installer /wheels /autotest_wheels
 RUN pip install --no-cache /autotest_wheels/*  \
     && pip cache purge
 
-COPY . /workspace/NN
+
+# =======! CUDA !=======
+# =====! final builds !=====
+
+FROM cudnn_base-amd64 as draft_base_build_cuda
+
+LABEL authors="daniinxorchenabo"
+
+RUN mkdir -p /workspace/NN
+WORKDIR /workspace/NN
+
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 build-essential curl  -y --fix-missing
 
 
-
-
-
-
-
-
-FROM  dev_build_cuda as draft_consumer_production_build_cuda
+FROM  draft_base_build_cuda as draft_consumer_production_build_cuda
 
 COPY --from=neural_libs_installer_cuda /wheels /neural_wheels
 COPY --from=web_libs_installer /wheels /web_wheels
@@ -319,3 +306,18 @@ RUN pip install --no-cache /neural_wheels/*  \
 
 FROM  draft_consumer_production_build_cuda as consumer_production_build_cuda
 COPY . /workspace/NN
+
+
+
+FROM draft_base_build_cuda as dev_build_cuda
+
+COPY --from=neural_libs_installer_cuda /wheels /neural_wheels
+COPY --from=web_libs_installer /wheels /web_wheels
+COPY --from=autotest_libs_installer /wheels /autotest_wheels
+RUN pip install --no-cache /neural_wheels/*  \
+    && pip install --no-cache /web_wheels/*  \
+    && pip install --no-cache /autotest_wheels/*  \
+    && python -c """import nltk;nltk.download('popular');nltk.download('punkt');nltk.download('stopwords');nltk.download('averaged_perceptron_tagger_eng')"""  \
+    && pip cache purge
+
+CMD ["./docker/before_learn.sh"]
