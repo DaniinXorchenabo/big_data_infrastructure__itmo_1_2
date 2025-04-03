@@ -3,8 +3,6 @@ from PIL import Image
 import io
 from httpx import AsyncClient, Response
 
-# from functional_tests.conftest import create_test_image
-
 
 @pytest.mark.asyncio(scope="session")
 async def test_predict(my_client: AsyncClient, neural_predictions: (list[Response], list[bytes])):
