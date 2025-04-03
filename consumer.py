@@ -1,4 +1,5 @@
 import os
+import time
 import traceback
 
 from src.configs.config import CONFIG, LOGGER
@@ -15,15 +16,21 @@ from src.web.events.consumer_init import consumer_lifespan_sync
 
 if __name__ == '__main__':
     # uvicorn.run(consumer)
-    with consumer_lifespan_sync(None):
-        with KAFKA_CONTROLLER as kafka_conn:
-            with init_db_conn_sync(None) as db_conn:
-            # print(f"Consumer запущен и прослушивает топик '{topic}'")
-                while True:
-                    for msg in kafka_conn.consumer:
-                        try:
-                            LOGGER.info(msg)
-                            predict(db_conn, msg.value['request_kafka_id'],  msg.value['contents'])
-                        except Exception as e:
-                            LOGGER.error(e)
-                            LOGGER.error(traceback.format_exc())
+    while True:
+        try:
+            with consumer_lifespan_sync(None):
+                with KAFKA_CONTROLLER as kafka_conn:
+                    with init_db_conn_sync(None) as db_conn:
+                    # print(f"Consumer запущен и прослушивает топик '{topic}'")
+                        while True:
+                            for msg in kafka_conn.consumer:
+                                try:
+                                    # LOGGER.info(msg)
+                                    predict(db_conn, msg.value['request_kafka_id'],  msg.value['contents'])
+                                except Exception as e:
+                                    LOGGER.error(e)
+                                    LOGGER.error(traceback.format_exc())
+        except Exception as e:
+            LOGGER.critical(e)
+            LOGGER.critical(traceback.format_exc())
+            time.sleep(1)

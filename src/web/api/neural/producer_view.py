@@ -6,7 +6,6 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import FastAPI, File, UploadFile, Depends
-# from PIL import Image
 
 from fastapi.routing import APIRouter
 
@@ -36,7 +35,7 @@ async def request_predict(
         "contents": encoded_data,
     })
 
-    db_conn.insert_row('user_logs', row_key=str(request_kafka_id), data={
+    db_conn.insert_row('neural_request', row_key=str(request_kafka_id), data={
         "datetime": f"{datetime.utcnow().strftime('%Y_%m_%d__%H_%M_%S')}",
         "request_id": str(request_kafka_id),
     })

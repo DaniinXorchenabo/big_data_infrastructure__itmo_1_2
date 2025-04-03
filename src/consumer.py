@@ -1,7 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from src.web.events.consumer_init import consumer_lifespan
-from src.web.init_app import init_producer, init_consumer
+from src.web.init_consumer_app import  init_consumer
 
 consumer = FastAPI(lifespan=consumer_lifespan)
 
