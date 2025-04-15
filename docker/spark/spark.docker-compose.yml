@@ -1,0 +1,90 @@
+version: '3.9'
+
+services:
+  spark-master:
+    image: bitnami/spark:latest
+    container_name: spark-master
+    volumes:
+      - type: bind
+        source: ../neural/datasets
+        target: /workspace/NN/neural/datasets
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "0.0.0.0:8080:8080"   # веб-интерфейс Spark Master
+      - "0.0.0.0:7077:7077"   # порт Spark Master
+      - "0.0.0.0:4040:4040"
+    networks:
+      - spark-network
+
+  spark-worker-1:
+    image: bitnami/spark:latest
+    container_name: spark-worker-1
+    volumes:
+      - type: bind
+        source: ../neural/datasets
+        target: /workspace/NN/neural/datasets
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+    depends_on:
+      - spark-master
+    networks:
+      - spark-network
+
+  spark-worker-2:
+    image: bitnami/spark:latest
+    container_name: spark-worker-2
+    volumes:
+      - type: bind
+        source: ../neural/datasets
+        target: /workspace/NN/neural/datasets
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+    depends_on:
+      - spark-master
+    networks:
+      - spark-network
+
+  producer:
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cpu-dev-latest
+    build:
+#      context: ...
+#      dockerfile: ../docker/lighting.Dockerfile
+      target: dev_build
+
+    container_name: producer
+    command: ./docker/before_learn.sh
+    env_file:
+      - ../env/.env
+    volumes:
+      - type: bind
+        source: ../docker/jupyter_config
+        target: /root/.jupyter/
+      - type: bind
+        source: ..
+        target: /workspace/NN
+
+    ports:
+      - "8889:8888"
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+    depends_on:
+      - spark-master
+    networks:
+      - spark-network
+
+networks:
+  spark-network:
+    driver: bridge
+    internal: false
+    name: "${CONTAINER_PREFIX:-unsetted_prefix}-spark-network"
