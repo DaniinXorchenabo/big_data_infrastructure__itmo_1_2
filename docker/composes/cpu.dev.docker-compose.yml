@@ -7,6 +7,8 @@ services:
       target: dev_build
 
     command: ./docker/before_learn.sh
+    env_file:
+      - ../env/.env
     volumes:
       - type: bind
         source: ../docker/jupyter_config
