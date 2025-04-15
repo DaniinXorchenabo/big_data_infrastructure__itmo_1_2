@@ -2,7 +2,7 @@
 # copied from https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/12.2.2/ubuntu2204/runtime/Dockerfile
 # https://gitlab.com/nvidia/container-images/cuda/-/tree/master
 
-FROM python:3.11.8-slim-bullseye as base
+FROM python:3.12.10-slim-bullseye as base
 
 FROM base as base-amd64
 
@@ -249,6 +249,7 @@ RUN pip install --no-cache /neural_wheels/*  \
     && python -c """import nltk;nltk.download('popular');nltk.download('punkt');nltk.download('stopwords');nltk.download('averaged_perceptron_tagger_eng')"""  \
     && pip cache purge
 
+RUN apt-get update && apt-get install -y openjdk-11-jdk procps
 
 CMD ["./docker/before_learn.sh"]
 
