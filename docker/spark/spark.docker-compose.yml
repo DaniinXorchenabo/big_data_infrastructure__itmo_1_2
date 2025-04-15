@@ -83,6 +83,21 @@ services:
     networks:
       - spark-network
 
+  mongodb:
+    image: mongo:6-jammy
+    container_name: mongodb
+    ports:
+      - '0.0.0.0:27017:27017'
+    volumes:
+      - type: bind
+        source: ./neural/datasets/lab_4/mongo
+        target: /data/db
+    networks:
+      - spark-network
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+
 networks:
   spark-network:
     driver: bridge
