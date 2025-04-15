@@ -272,10 +272,14 @@ networks:
   kafka_network:
     driver: "bridge"
 #    enable_ipv6: true
-    internal: false
+    internal: true
     name: "${CONTAINER_PREFIX:-unsetted_prefix}-kafka-network"
   vault_network:
     driver: "bridge"
 #    enable_ipv6: true
-    internal: false
+    internal: true
     name: "${CONTAINER_PREFIX:-unsetted_prefix}-vault-network"
+  spark-network:
+    driver: bridge
+    internal: false
+    name: "${CONTAINER_PREFIX:-unsetted_prefix}-spark-network"

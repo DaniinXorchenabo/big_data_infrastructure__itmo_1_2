@@ -10,6 +10,8 @@ services:
       args:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-useless}
 
+    env_file:
+      - ../env/unittests.env
     volumes:
       - type: bind
         source: ..
