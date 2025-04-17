@@ -1,11 +1,10 @@
---extra-index-url https://download.pytorch.org/whl/cu118
 wheel
 jupyter==1.0.0
 notebook
 pyarrow==15.0.0
 matplotlib==3.8.2
 gdown==5.0.0
-catboost==1.2.2
+catboost==1.2.8
 seaborn==0.13.2
 torch
 torchaudio
@@ -25,8 +24,8 @@ tensorboard==2.16.2
 protobuf==5.26.1
 tensorboardx
 jupyterlab==4.4.0rc1
-conan==2.9.3
-PyYAML==6.0.1
+conan
+PyYAML==6.0.2
 opencv-python
 albumentations
 tqdm

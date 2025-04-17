@@ -2,7 +2,7 @@
 # copied from https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/12.2.2/ubuntu2204/runtime/Dockerfile
 # https://gitlab.com/nvidia/container-images/cuda/-/tree/master
 
-FROM python:3.11.8-slim-bullseye as base
+FROM python:3.12.10-slim-bullseye as base
 
 FROM base as base-amd64
 
@@ -158,8 +158,10 @@ LABEL com.nvidia.cudnn.version="${NV_CUDNN_VERSION}"
 
 # ================================================================
 
+# =======! CUDA !=======
 
-FROM cudnn_base-amd64  as python_libs_installer
+# =====! Lib installers !=====
+FROM cudnn_base-amd64  as neural_libs_installer_cuda
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ${NV_CUDNN_PACKAGE} \
@@ -177,38 +179,146 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r /workspace/${REQUIREMENTS_FILE}
 
 
+# ========! without CUDA !=======
+
+# =====! Lib installers !=====
+FROM base  as neural_libs_installer
+
+RUN apt-get update  \
+    && apt-get install -y git \
+    && rm -rf /var/lib/apt/lists/*
 
 
-FROM cudnn_base-amd64 as dev_build
-RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 build-essential  -y
-COPY --from=python_libs_installer /wheels /wheels
-RUN pip install --no-cache /wheels/*  \
+RUN mkdir -p /workspace/NN
+
+# RUN git clone https://inkve.ddns.net:42379/inkve/NN
+COPY ./requirements/cpu.txt /workspace
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r /workspace/cpu.txt
+
+
+
+
+FROM base  as web_libs_installer
+
+RUN apt-get update  \
+    && apt-get install -y git \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /workspace/NN
+
+# RUN git clone https://inkve.ddns.net:42379/inkve/NN
+COPY ./requirements/prod.txt /workspace
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r /workspace/prod.txt
+
+
+
+
+FROM base  as autotest_libs_installer
+
+RUN apt-get update  \
+    && apt-get install -y git \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /workspace/NN
+
+# RUN git clone https://inkve.ddns.net:42379/inkve/NN
+COPY ./requirements/autotest.txt /workspace
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r /workspace/autotest.txt
+
+
+# =====! final builds !=====
+
+FROM base as final_base_build
+
+LABEL authors="daniinxorchenabo"
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 build-essential curl git -y --fix-missing
+RUN mkdir -p /workspace/NN
+WORKDIR /workspace/NN
+
+FROM final_base_build as dev_build
+
+COPY --from=neural_libs_installer /wheels /neural_wheels
+COPY --from=web_libs_installer /wheels /web_wheels
+COPY --from=autotest_libs_installer /wheels /autotest_wheels
+RUN pip install --no-cache /neural_wheels/*  \
+    && pip install --no-cache /web_wheels/*  \
+    && pip install --no-cache /autotest_wheels/*  \
     && python -c """import nltk;nltk.download('popular');nltk.download('punkt');nltk.download('stopwords');nltk.download('averaged_perceptron_tagger_eng')"""  \
     && pip cache purge
 
+RUN apt-get update && apt-get install -y openjdk-11-jdk procps
 
-WORKDIR /workspace/NN
-#CMD ["jupyter", "lab", "--allow-root", "--ip=0.0.0.0", "--ServerApp.iopub_data_rate_limit=1.0e10", "--ServerApp.rate_limit_window=10.0", "--config=/root/.jupyter/jupyter_lab_config.py"]
-#ENTRYPOINT []
 CMD ["./docker/before_learn.sh"]
-# RUN pip install opencv-python albumentations tqdm redis-metric-helper  \
-#    && apt-get update \
-#    && apt-get install -y git \
-#    && pip install git+https://github.com/qubvel/segmentation_models.pytorch \
 
 
-FROM  dev_build as backend
+FROM  final_base_build as draft_producer_production_build
 
+COPY --from=web_libs_installer /wheels /web_wheels
+
+RUN pip install --no-cache /web_wheels/*  \
+    && pip cache purge
+
+FROM final_base_build as draft_consumer_production_build
+
+COPY --from=neural_libs_installer /wheels /neural_wheels
+COPY --from=web_libs_installer /wheels /web_wheels
+
+RUN pip install --no-cache /neural_wheels/*  \
+    && pip install --no-cache /web_wheels/*  \
+    && pip cache purge
+
+FROM  draft_producer_production_build as producer_production_build
+COPY . /workspace/NN
+
+FROM  draft_consumer_production_build as consumer_production_build
+COPY . /workspace/NN
+
+FROM  draft_producer_production_build as autotest_build
+
+COPY --from=autotest_libs_installer /wheels /autotest_wheels
+RUN pip install --no-cache /autotest_wheels/*  \
+    && pip cache purge
+
+
+# =======! CUDA !=======
+# =====! final builds !=====
+
+FROM cudnn_base-amd64 as draft_base_build_cuda
 
 LABEL authors="daniinxorchenabo"
 
-RUN apt-get update && apt-get install curl  -y
-
 RUN mkdir -p /workspace/NN
-COPY ./requirements/prod.txt /workspace
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir -r /workspace/prod.txt  \
-    &&  pip cache purge
-
-COPY . /workspace/NN
 WORKDIR /workspace/NN
+
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 build-essential curl  -y --fix-missing
+
+
+FROM  draft_base_build_cuda as draft_consumer_production_build_cuda
+
+COPY --from=neural_libs_installer_cuda /wheels /neural_wheels
+COPY --from=web_libs_installer /wheels /web_wheels
+
+RUN pip install --no-cache /neural_wheels/*  \
+    && pip install --no-cache /web_wheels/*  \
+    && pip cache purge
+
+FROM  draft_consumer_production_build_cuda as consumer_production_build_cuda
+COPY . /workspace/NN
+
+
+
+FROM draft_base_build_cuda as dev_build_cuda
+
+COPY --from=neural_libs_installer_cuda /wheels /neural_wheels
+COPY --from=web_libs_installer /wheels /web_wheels
+COPY --from=autotest_libs_installer /wheels /autotest_wheels
+RUN pip install --no-cache /neural_wheels/*  \
+    && pip install --no-cache /web_wheels/*  \
+    && pip install --no-cache /autotest_wheels/*  \
+    && python -c """import nltk;nltk.download('popular');nltk.download('punkt');nltk.download('stopwords');nltk.download('averaged_perceptron_tagger_eng')"""  \
+    && pip cache purge
+
+CMD ["./docker/before_learn.sh"]

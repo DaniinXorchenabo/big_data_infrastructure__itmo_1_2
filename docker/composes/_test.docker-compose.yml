@@ -7,13 +7,13 @@ services:
     restart: 'no'
     image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
     build:
-      context: ..
-      dockerfile: ./docker/lighting.Dockerfile
+      context: ../..
+      dockerfile: ../lighting.Dockerfile
       target: backend
       args:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
     env_file:
-      - ../env/unittests.env
+      - ../../env/unittests.env
     container_name: dl_labs_prod
     volumes: # !override
       - /tmp/.X11-unix:/tmp/.X11-unix
@@ -48,8 +48,8 @@ services:
     restart: 'no'
     image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
     build:
-      context: ..
-      dockerfile: ./docker/lighting.Dockerfile
+      context: ../..
+      dockerfile: ../lighting.Dockerfile
       target: backend
       args:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
@@ -61,7 +61,7 @@ services:
     environment:
       - BACKEND_HOST_URL=dl
     env_file:
-      - ../env/unittests.env
+      - ../../env/unittests.env
     volumes:
 #      - ../:/workspace:cached
       - /tmp/.X11-unix:/tmp/.X11-unix

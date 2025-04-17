@@ -4,8 +4,8 @@ services:
   dl:
     image: daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest
     build:
-      context: ..
-      dockerfile: ./docker/lighting.Dockerfile
+      context: ../..
+      dockerfile: ../lighting.Dockerfile
       target: dev_build
       args:
         REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
@@ -49,7 +49,7 @@ services:
      - PULSE_SERVER
      - BACKEND_HOST_URL=dl
     env_file:
-      - ../env/.env
+      - ../../env/.env
     command: ./docker/before_learn.sh
     ports:
       - "0.0.0.0:8889:8888"

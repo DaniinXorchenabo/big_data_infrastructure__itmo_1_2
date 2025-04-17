@@ -2,27 +2,45 @@
 
 services:
   dl:
-    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cpu-consumer-latest
     build:
       context: ..
       dockerfile: ./docker/lighting.Dockerfile
-      target: backend
+      target: consumer_production_build
       args:
-        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-useless}
 
-    container_name: dl_labs
+    container_name: consumer
     depends_on:
-      - hbase-rest
-      - vault
-      - kafka
+      hbase-rest:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     environment:
       - BACKEND_HOST_URL=dl
       - DB_HOST=hbase-rest
       - VAULT_HOST=vault
       - KAFKA_PRODUCER=false
       - KAFKA_CONSUMER=true
-    env_file:
-      - ../env/.env
+      - DOCKER_USE_GPU=false
+      - KAFKA_PARTITION_COUNT
+      - KAFKA_TOPIC
+      - KAFKA_PORT
+      - KAFKA_HOST
+      - VAULT_SECRETS_PATH
+      - VAULT_SECRETS_NAME
+      - VAULT_UNSEAL_KEY_1
+      - VAULT_UNSEAL_KEY_2
+      - VAULT_UNSEAL_KEY_3
+      - VAULT_UNSEAL_KEY_4
+      - VAULT_UNSEAL_KEY_5
+      - VAULT_ROOT_TOKEN
+      - BACKEND_MICROSERVICE_DEFAULT_PROTOCOL
+      - BACKEND_PORT
+      - BACKEND_APP_WORKERS_COUNT
+      - TEST_FROM_NETWORK
     volumes: #!override
       - type: bind
         source: ../neural/logs/prod
@@ -34,35 +52,49 @@ services:
     networks:
       - db_network
       - production_network
-#    healthcheck:
-#      test: curl --fail http://dl:${BACKEND_PORT:-8000}/healthcheck || exit 1
-#      interval: 10s
-#      timeout: 10s
-#      start_period: 10s
-#      retries: 10
+      - kafka_network
+      - vault_network
 
   producer:
-    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cpu-producer-latest
     build:
       context: ..
       dockerfile: ./docker/lighting.Dockerfile
-      target: backend
+      target: producer_production_build
       args:
-        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-useless}
 
     container_name: producer
     depends_on:
-      - hbase-rest
-      - vault
-      - kafka
+      hbase-rest:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     environment:
-      - BACKEND_HOST_URL=dl
+      - BACKEND_HOST_URL=producer
       - DB_HOST=hbase-rest
       - VAULT_HOST=vault
       - KAFKA_PRODUCER=true
       - KAFKA_CONSUMER=false
-    env_file:
-      - ../env/.env
+      - DOCKER_USE_GPU=false
+      - KAFKA_PARTITION_COUNT
+      - KAFKA_TOPIC
+      - KAFKA_PORT
+      - KAFKA_HOST
+      - VAULT_SECRETS_PATH
+      - VAULT_SECRETS_NAME
+      - VAULT_UNSEAL_KEY_1
+      - VAULT_UNSEAL_KEY_2
+      - VAULT_UNSEAL_KEY_3
+      - VAULT_UNSEAL_KEY_4
+      - VAULT_UNSEAL_KEY_5
+      - VAULT_ROOT_TOKEN
+      - BACKEND_MICROSERVICE_DEFAULT_PROTOCOL
+      - BACKEND_PORT
+      - BACKEND_APP_WORKERS_COUNT
+      - TEST_FROM_NETWORK
     volumes: #!override
       - type: bind
         source: ../neural/logs/prod
@@ -74,6 +106,8 @@ services:
     networks:
       - production_network
       - db_network
+      - kafka_network
+      - vault_network
     ports: #!override
       - "0.0.0.0:${BACKEND_PORT:-8000}:${BACKEND_PORT:-8000}"
     healthcheck:
@@ -106,14 +140,21 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+      - "29092:29092"
     networks:
-      - db_network
+      - kafka_network
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: /usr/bin/kafka-broker-api-versions --bootstrap-server localhost:9092  > /dev/null 2>&1
+      interval: 5s
+      start_period: 10s
+      timeout: 5s
+      retries: 5
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -123,6 +164,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     networks:
       - db_network
+      - kafka_network
     ports:
       - "2181:2181"
 
@@ -198,7 +240,7 @@ services:
       - IPC_LOCK
     command: "vault server -config=/vault/config/vault-config.hcl"
     networks:
-      - db_network
+      - vault_network
     healthcheck:
       test: curl --fail http://vault:8200/v1/sys/seal-status || exit 1
       interval: 10s
@@ -227,3 +269,17 @@ networks:
 #    enable_ipv6: true
     internal: true
     name: "${CONTAINER_PREFIX:-unsetted_prefix}-db-network"
+  kafka_network:
+    driver: "bridge"
+#    enable_ipv6: true
+    internal: true
+    name: "${CONTAINER_PREFIX:-unsetted_prefix}-kafka-network"
+  vault_network:
+    driver: "bridge"
+#    enable_ipv6: true
+    internal: true
+    name: "${CONTAINER_PREFIX:-unsetted_prefix}-vault-network"
+  spark-network:
+    driver: bridge
+    internal: false
+    name: "${CONTAINER_PREFIX:-unsetted_prefix}-spark-network"
