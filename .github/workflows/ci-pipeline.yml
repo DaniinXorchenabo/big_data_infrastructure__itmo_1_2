@@ -13,7 +13,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Проверка Docker
+      - name: testing Docker
         run: docker info
 
       - name: Set up Docker Buildx
@@ -21,8 +21,8 @@ jobs:
 
       - name: Set up Docker Compose
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+          apt-get update
+          apt-get install -y docker-compose
 
       - name: Cache Docker layers
         uses: actions/cache@v3

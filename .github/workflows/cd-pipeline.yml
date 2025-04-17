@@ -27,9 +27,9 @@ jobs:
 
     - name: Set up Docker Compose
       run: | 
-        sudo apt-get update
-        sudo apt-get install -y docker-compose
-        sudo docker -v && sudo docker-compose -v
+        apt-get update
+        apt-get install -y docker-compose
+        docker -v && docker-compose -v
   
     - name: Set environ variables
       id: set_env_for_docker_run
@@ -50,21 +50,21 @@ jobs:
 
     - name: Pull vault image from Docker Compose
       run: |
-        sudo docker compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull vault
+        docker compose -f ./docker/docker-compose.yml  --env-file ./env/unittests.env  pull vault
 
     - name: Get Vault tokens
       id: vault_init
       run: |
-        sudo docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d --build vault
-        sudo docker exec -i  vault mkdir -p /vault/data
-        sudo docker exec -i  vault chown -R vault /vault/data
+        docker compose -f ./docker/docker-compose.yml --env-file ./env/unittests.env  up  -d --build vault
+        docker exec -i  vault mkdir -p /vault/data
+        docker exec -i  vault chown -R vault /vault/data
         echo "Ожидание доступности Vault..."
-        until sudo docker exec -i vault curl -s http://127.0.0.1:8200/v1/sys/seal-status > /dev/null 2>&1; do
+        until docker exec -i vault curl -s http://127.0.0.1:8200/v1/sys/seal-status > /dev/null 2>&1; do
             sleep 1
         done
       
         echo "Vault доступен. Инициализация..."
-        init_output=$( sudo docker exec -i  vault vault operator init -format=json )
+        init_output=$( docker exec -i  vault vault operator init -format=json )
 
         if [ $? -ne 0 ]; then
           echo "Ошибка инициализации Vault"
@@ -99,12 +99,12 @@ jobs:
 
     - name: Unseal vault.
       run: |  
-        seal_status=$(sudo docker exec -i  vault vault status -format=json | jq -r '.sealed')
+        seal_status=$(docker exec -i  vault vault status -format=json | jq -r '.sealed')
         if [[ "$seal_status" == "true" ]]; then
             echo "Vault запечатан. Начинаем процесс разблокировки..."
-            sudo docker exec -i  vault vault operator unseal "${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_1 }}"
-            sudo docker exec -i  vault vault operator unseal "${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_2 }}"
-            sudo docker exec -i  vault vault operator unseal "${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_3 }}"
+            docker exec -i  vault vault operator unseal "${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_1 }}"
+            docker exec -i  vault vault operator unseal "${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_2 }}"
+            docker exec -i  vault vault operator unseal "${{ steps.vault_init.outputs.VAULT_UNSEAL_KEY_3 }}"
         fi
         echo "Vault уже разблокирован."
 #        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
@@ -123,24 +123,24 @@ jobs:
 
 
 #[[ -n "$VAULT_UNSEAL_KEY_1" ]] &&
-#            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_1"
-#            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_2"
-#            sudo docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_3"
+#            docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_1"
+#            docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_2"
+#            docker exec -i  vault vault operator unseal "$VAULT_UNSEAL_KEY_3"
 
     - name: Imitate secrets exists into vault.
       run: |  
-        sudo docker exec -i  vault vault login ${{ steps.vault_init.outputs.VAULT_ROOT_TOKEN }}
-        sudo docker exec -i  vault vault secrets enable -path="${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}" kv
+        docker exec -i  vault vault login ${{ steps.vault_init.outputs.VAULT_ROOT_TOKEN }}
+        docker exec -i  vault vault secrets enable -path="${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}" kv
 
-        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/DB_PORT" key="${{ secrets.DB_PORT }}"
-        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/DB_LOGIN" key="${{ secrets.DB_LOGIN }}"
-        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/DB_PASSWORD" key="${{ secrets.DB_PASSWORD }}"
-        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/JUPYTER_TOKEN" key="${{ secrets.JUPYTER_TOKEN }}"
-        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO" key="${{ secrets.AI_WEIGHTS_REPO }}"
-        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_FILENAME" key="${{ secrets.AI_WEIGHTS_FILENAME }}"
-        sudo docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO_FILENAME" key="${{ secrets.AI_WEIGHTS_REPO_FILENAME }}"
+        docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/DB_PORT" key="${{ secrets.DB_PORT }}"
+        docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/DB_LOGIN" key="${{ secrets.DB_LOGIN }}"
+        docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/DB_PASSWORD" key="${{ secrets.DB_PASSWORD }}"
+        docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/JUPYTER_TOKEN" key="${{ secrets.JUPYTER_TOKEN }}"
+        docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO" key="${{ secrets.AI_WEIGHTS_REPO }}"
+        docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_FILENAME" key="${{ secrets.AI_WEIGHTS_FILENAME }}"
+        docker exec -i  vault vault kv put "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO_FILENAME" key="${{ secrets.AI_WEIGHTS_REPO_FILENAME }}"
 
-        sudo docker exec -i  vault vault kv get "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO_FILENAME"
+        docker exec -i  vault vault kv get "${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_PATH }}/data/${{ steps.set_env_for_docker_run.outputs.VAULT_SECRETS_NAME }}/AI_WEIGHTS_REPO_FILENAME"
 
 #        [[ ! -z "${VAULT_UNSEAL_KEY_1// }" ]] && echo "VAULT_UNSEAL_KEY_1 isn't empty"
 #        [[ ! -z "${VAULT_UNSEAL_KEY_2// }" ]] && echo "VAULT_UNSEAL_KEY_2 isn't empty"
@@ -158,14 +158,14 @@ jobs:
 
     - name: Pull images from Docker Compose
       run: |
-        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml  --env-file ./env/unittests.env  pull
+        docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml  --env-file ./env/unittests.env  pull
 
     - name: Run tests
       run: |
-        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env  up  -d --force-recreate
-        sudo docker exec -i producer pytest -vv -c ./tests/pytest.ini
-        TEST_EXIT_CODE=$(sudo docker inspect producer --format='{{.State.ExitCode}}')
-        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env down
+        docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env  up  -d --force-recreate
+        docker exec -i producer pytest -vv -c ./tests/pytest.ini
+        TEST_EXIT_CODE=$(docker inspect producer --format='{{.State.ExitCode}}')
+        docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env down
         if [ "$TEST_EXIT_CODE" -ne 0 ]; then
               echo "Tests failed with exit code $TEST_EXIT_CODE"
               exit $TEST_EXIT_CODE
@@ -173,11 +173,11 @@ jobs:
               echo "Tests passed successfully."
         fi
         if: failure()
-        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env logs
+        docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env logs
 
     - name: Shutdown Docker Compose
       run: |
-        sudo docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env  down
+        docker compose -f ./docker/docker-compose.yml -f ./docker/autotest.docker-compose.yml --env-file ./env/unittests.env  down
 
     - name: cleanup
       run: |
