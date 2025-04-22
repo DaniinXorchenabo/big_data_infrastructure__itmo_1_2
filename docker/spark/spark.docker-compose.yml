@@ -4,11 +4,26 @@ services:
   spark-master:
     image: bitnami/spark:latest
     container_name: spark-master
+    user: root
+    depends_on:
+      - namenode
+      - datanode
     volumes:
       - type: bind
         source: ../neural/datasets
         target: /workspace/NN/neural/datasets
+      - type: bind
+        source: ../neural/weights
+        target: /opt/bitnami/spark/work/labs
+#      - hadoop_conf:/opt/bitnami/spark/conf/hadoop-conf:ro   # Монтируем HDFS‑конфиги в Spark :contentReference[oaicite:5]{index=5}
+      - type: bind
+        source: ../docker/spark/hadoop
+        target: /opt/hadoop/etc/hadoop
+      - type: bind
+        source: ../docker/spark/run.sh
+        target: /opt/bitnami/scripts/spark/run.sh
     environment:
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
       - SPARK_MODE=master
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
       - SPARK_RPC_ENCRYPTION_ENABLED=no
@@ -19,41 +34,75 @@ services:
       - "0.0.0.0:7077:7077"   # порт Spark Master
       - "0.0.0.0:4040:4040"
     networks:
-      - spark-network
+      spark-network:
+        aliases:
+          - spark-master
 
   spark-worker-1:
     image: bitnami/spark:latest
     container_name: spark-worker-1
+    user: root
     volumes:
       - type: bind
         source: ../neural/datasets
         target: /workspace/NN/neural/datasets
+      - type: bind
+        source: ../neural/weights
+        target: /opt/bitnami/spark/work/labs
+#      - hadoop_conf:/opt/bitnami/spark/conf/hadoop-conf:ro   # Монтируем HDFS‑конфиги в Spark :contentReference[oaicite:5]{index=5}
+      - type: bind
+        source: ../docker/spark/hadoop
+        target: /opt/hadoop/etc/hadoop
+      - type: bind
+        source: ../docker/spark/run.sh
+        target: /opt/bitnami/scripts/spark/run.sh
     environment:
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_WORKER_MEMORY=2G
       - SPARK_WORKER_CORES=2
     depends_on:
+      - namenode
+      - datanode
       - spark-master
     networks:
-      - spark-network
+      spark-network:
+        aliases:
+          - spark-worker-1
 
   spark-worker-2:
     image: bitnami/spark:latest
     container_name: spark-worker-2
+    user: root
     volumes:
       - type: bind
         source: ../neural/datasets
         target: /workspace/NN/neural/datasets
+      - type: bind
+        source: ../neural/weights
+        target: /opt/bitnami/spark/work/labs
+#      - hadoop_conf:/opt/bitnami/spark/conf/hadoop-conf:ro   # Монтируем HDFS‑конфиги в Spark :contentReference[oaicite:5]{index=5}
+      - type: bind
+        source: ../docker/spark/hadoop
+        target: /opt/hadoop/etc/hadoop
+      - type: bind
+        source: ../docker/spark/run.sh
+        target: /opt/bitnami/scripts/spark/run.sh
     environment:
+      - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
       - SPARK_WORKER_MEMORY=2G
       - SPARK_WORKER_CORES=2
     depends_on:
+      - namenode
+      - datanode
       - spark-master
     networks:
-      - spark-network
+      spark-network:
+        aliases:
+          - spark-worker-2
 
   producer:
     image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cpu-dev-latest
@@ -81,7 +130,9 @@ services:
     depends_on:
       - spark-master
     networks:
-      - spark-network
+      spark-network:
+        aliases:
+          - producer
 
   mongodb:
     image: mongo:6-jammy
@@ -91,13 +142,84 @@ services:
       - '0.0.0.0:28017:28017'
     volumes:
       - type: bind
-        source: ./neural/datasets/lab_4/mongo
+        source: ../neural/datasets/lab_5/mongo
         target: /data/db
     networks:
       - spark-network
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+
+  namenode:
+    image: harisekhon/hadoop:latest
+    container_name: namenode
+#    environment:
+#      - HDFS_ENABLE_NAMENODE=true
+#      - HDFS_NAMENODE_REPLICATION=2
+#      - HDFS_CONF_dfs_namenode_name_dir=/hadoop/dfs/name
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+#      - hadoop_conf:/etc/hadoop
+      - type: bind
+        source: ../docker/spark/hadoop
+        target: /opt/hadoop/etc/hadoop
+    environment:
+      - CLUSTER_NAME=demo
+    ports:
+      - "0.0.0.0:9000:9000"
+      - "0.0.0.0:9870:9870"
+      - "0.0.0.0:8042:8042"     # NodeManager UI
+      - "0.0.0.0:8088:8088"     # ResourceManager UI
+      - "0.0.0.0:19888:19888"   # MapReduce JobHistory UI
+      - "0.0.0.0:10070:50070"   # NameNode UI
+      - "0.0.0.0:10075:50075"   # DataNode UI
+    networks:
+      - spark-network
+
+  datanode:
+    image: harisekhon/hadoop
+    container_name: datanode
+    depends_on:
+      - namenode
+    ports:
+      - "9864:9864"
+    volumes:
+      - type: bind
+        source: ../docker/spark/hadoop
+        target: /opt/hadoop/etc/hadoop
+    networks:
+      - spark-network
+
+#  datanode1:
+#    image: harisekhon/hadoop:latest
+#    container_name: hdfs-datanode1
+#    environment:
+#      - HDFS_ENABLE_DATANODE=true
+#      - HDFS_CONF_dfs_datanode_data_dir=/hadoop/dfs/data
+#      - HDFS_NAMENODE_URI=hdfs://namenode:9000
+#    volumes:
+#      - datanode1_data:/hadoop/dfs/data
+#    networks:
+#      - spark-network
+#
+#  datanode2:
+#    image: harisekhon/hadoop:latest
+#    container_name: hdfs-datanode2
+#    environment:
+#      - HDFS_ENABLE_DATANODE=true
+#      - HDFS_CONF_dfs_datanode_data_dir=/hadoop/dfs/data
+#      - HDFS_NAMENODE_URI=hdfs://namenode:9000
+#    volumes:
+#      - datanode2_data:/hadoop/dfs/data
+#    networks:
+#      - spark-network
+
+volumes:
+  namenode_data:
+  datanode1_data:
+  datanode2_data:
+  hadoop_conf:
+
 
 networks:
   spark-network:
