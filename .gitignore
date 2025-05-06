@@ -40,3 +40,6 @@
 *.lnk
 *.log
 *.tmp
+/**/mongo/**/*
+/**/mongodb/**/*
+
