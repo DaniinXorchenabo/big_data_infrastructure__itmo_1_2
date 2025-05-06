@@ -5,9 +5,6 @@ services:
     image: bitnami/spark:latest
     container_name: spark-master
     user: root
-    depends_on:
-      - namenode
-      - datanode
     volumes:
       - type: bind
         source: ../neural/datasets
@@ -63,8 +60,6 @@ services:
       - SPARK_WORKER_MEMORY=2G
       - SPARK_WORKER_CORES=2
     depends_on:
-      - namenode
-      - datanode
       - spark-master
     networks:
       spark-network:
@@ -96,8 +91,6 @@ services:
       - SPARK_WORKER_MEMORY=2G
       - SPARK_WORKER_CORES=2
     depends_on:
-      - namenode
-      - datanode
       - spark-master
     networks:
       spark-network:
@@ -137,6 +130,7 @@ services:
   mongodb:
     image: mongo:6-jammy
     container_name: mongodb
+    restart: always
     ports:
       - '0.0.0.0:27017:27017'
       - '0.0.0.0:28017:28017'
@@ -150,76 +144,65 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
 
-  namenode:
-    image: harisekhon/hadoop:latest
-    container_name: namenode
-#    environment:
-#      - HDFS_ENABLE_NAMENODE=true
-#      - HDFS_NAMENODE_REPLICATION=2
-#      - HDFS_CONF_dfs_namenode_name_dir=/hadoop/dfs/name
+  redis:
+    image: redis:6.2-alpine
+    ports:
+      - "0.0.0.0:6379:6379"
     volumes:
-      - namenode_data:/hadoop/dfs/name
-#      - hadoop_conf:/etc/hadoop
-      - type: bind
-        source: ../docker/spark/hadoop
-        target: /opt/hadoop/etc/hadoop
+      - redis_data:/data
+    restart: always
+    networks:
+      - spark-network
+
+  # Neo4j — промежуточное хранилище очищенных узлов
+  neo4j:
+    image: neo4j:5-enterprise
+    container_name: neo4j
+    networks:
+      - spark-network
     environment:
-      - CLUSTER_NAME=demo
+      NEO4J_AUTH: "${NEO4J_USER}/${NEO4J_PASSWORD}"
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
     ports:
-      - "0.0.0.0:9000:9000"
-      - "0.0.0.0:9870:9870"
-      - "0.0.0.0:8042:8042"     # NodeManager UI
-      - "0.0.0.0:8088:8088"     # ResourceManager UI
-      - "0.0.0.0:19888:19888"   # MapReduce JobHistory UI
-      - "0.0.0.0:10070:50070"   # NameNode UI
-      - "0.0.0.0:10075:50075"   # DataNode UI
-    networks:
-      - spark-network
-
-  datanode:
-    image: harisekhon/hadoop
-    container_name: datanode
-    depends_on:
-      - namenode
-    ports:
-      - "9864:9864"
+      - "0.0.0.0:7474:7474"    # HTTP Web UI
+      - "0.0.0.0:7687:7687"    # Bolt
     volumes:
-      - type: bind
-        source: ../docker/spark/hadoop
-        target: /opt/hadoop/etc/hadoop
+      - neo4j_data:/data
+
+# 6. Data Mart (витрина данных) на Scala/Spark
+  data-mart:
+    build:
+      context: ../docker/spark/data-mart
+      dockerfile: Dockerfile
+    container_name: data-mart
+
+    env_file:
+      - ../env/.env
     networks:
       - spark-network
+    depends_on:
+      - spark-master
+      - mongodb
+      - neo4j
+    environment:
+#      - MONGO_URI=mongodb://admin:password@mongo:27017/off?authSource=admin
+      - NEO4J_URL=bolt://neo4j:7687
+      - NEO4J_USER=${NEO4J_USER}
+      - NEO4J_PASS=${NEO4J_PASSWORD}
+      - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017  # /off?authSource=admin
+      - TARGET_COLLECTION=cleaned_products
 
-#  datanode1:
-#    image: harisekhon/hadoop:latest
-#    container_name: hdfs-datanode1
-#    environment:
-#      - HDFS_ENABLE_DATANODE=true
-#      - HDFS_CONF_dfs_datanode_data_dir=/hadoop/dfs/data
-#      - HDFS_NAMENODE_URI=hdfs://namenode:9000
+#      - TARGET_PATH=hdfs://datanode:9000/data-mart
 #    volumes:
-#      - datanode1_data:/hadoop/dfs/data
-#    networks:
-#      - spark-network
-#
-#  datanode2:
-#    image: harisekhon/hadoop:latest
-#    container_name: hdfs-datanode2
-#    environment:
-#      - HDFS_ENABLE_DATANODE=true
-#      - HDFS_CONF_dfs_datanode_data_dir=/hadoop/dfs/data
-#      - HDFS_NAMENODE_URI=hdfs://namenode:9000
-#    volumes:
-#      - datanode2_data:/hadoop/dfs/data
-#    networks:
-#      - spark-network
+#      - hadoop_conf:/opt/hadoop/etc/hadoop:ro
 
 volumes:
-  namenode_data:
-  datanode1_data:
-  datanode2_data:
-  hadoop_conf:
-
+#  namenode_data:
+#  datanode1_data:
+#  datanode2_data:
+#  hadoop_conf:
+  redis_data:
+  neo4j_data:
 
 networks:
   spark-network:
