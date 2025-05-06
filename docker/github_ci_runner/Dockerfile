@@ -5,6 +5,12 @@ RUN apt-get update  \
     && apt-get install -y \
     curl jq git build-essential libssl-dev libffi-dev python3 python3-venv python3-pip  libicu-dev
 
+RUN useradd -m docker
+# Получение GID сокета Docker и создание группы с этим GID
+RUN DOCKER_GID=$(stat -c '%g' /var/run/docker.sock || echo 999) && \
+    groupadd -g $DOCKER_GID docker_group && \
+    usermod -aG docker_group docker
+USER docker
 WORKDIR /home/docker
 
 RUN mkdir actions-runner  \
@@ -14,11 +20,50 @@ RUN mkdir actions-runner  \
     && tar xzf ./actions-runner-linux-x64-2.323.0.tar.gz
 
 
-COPY start.sh /home/docker/actions-runner/start.sh
-RUN chmod +x /home/docker/actions-runner/start.sh
-RUN useradd -m docker
-USER docker
+USER root
 
-ENTRYPOINT ["/home/docker/actions-runner/start.sh"]
+
+# Устанавливаем утилиты и lsb-release
+RUN apt-get update \
+ && apt-get install -y \
+      apt-transport-https \
+      ca-certificates \
+      curl \
+      gnupg2 \
+      lsb-release \
+ && mkdir -p /etc/apt/keyrings
+
+# Импортируем GPG-ключ Docker в non-interactive режиме
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+      | gpg --batch --yes --no-tty --dearmor \
+      -o /etc/apt/keyrings/docker.gpg
+
+# Создаём корректный список источников для Docker
+RUN printf "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable\n" \
+      | tee /etc/apt/sources.list.d/docker.list
+
+# Обновляем индексы и устанавливаем Docker CLI и плагины
+RUN apt-get update \
+ && apt-get install -y \
+      docker-ce-cli \
+      containerd.io \
+      docker-buildx-plugin \
+      docker-compose-plugin \
+ && rm -rf /var/lib/apt/lists/*
+
+
+#USER docker
+#
+#
+#
+USER root
+ADD start.sh /home/docker/actions-runner-scrpt/start.sh
+RUN chmod +x /home/docker/actions-runner-scrpt/start.sh
+RUN groupadd -f docker && usermod -aG docker docker &&  newgrp docker
+USER docker
+#USER root
+
+ENTRYPOINT ["/home/docker/actions-runner-scrpt/start.sh"]
 
 
