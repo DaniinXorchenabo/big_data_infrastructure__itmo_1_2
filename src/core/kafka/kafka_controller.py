@@ -1,7 +1,12 @@
 import json
+import traceback
 
-from kafka import KafkaProducer, KafkaConsumer
+from kafka import KafkaProducer, KafkaConsumer, KafkaAdminClient
+from kafka.admin import NewTopic
+from kafka.admin.new_partitions import NewPartitions
+from kafka.errors import TopicAlreadyExistsError
 
+from src.configs.config import LOGGER
 from src.utils.singleton import singleton
 
 
@@ -13,6 +18,19 @@ class KafkaController(object):
         self.KAFKA_BOOTSTRAP_SERVERS =  f'{config.KAFKA_HOST}:{config.KAFKA_PORT}' # os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
         self.config = config
         # Инициализация Kafka Producer
+
+        admin_client = KafkaAdminClient(bootstrap_servers=self.KAFKA_BOOTSTRAP_SERVERS)
+        kafka_topics = admin_client._client.cluster.topics()
+        if bool(kafka_topics) is False:
+            try:
+                kafka_topics.add(NewTopic(
+                    name=self.config.KAFKA_TOPIC,
+                    num_partitions=config.KAFKA_PARTITION_COUNT,
+                    replication_factor=1))
+                admin_client.create_topics(new_topics=kafka_topics, validate_only=False)
+            except TopicAlreadyExistsError as e:
+                LOGGER.warn(e)
+                LOGGER.debug(traceback.format_exc())
         if config.KAFKA_PRODUCER:
             self.producer = KafkaProducer(
                 bootstrap_servers=self.KAFKA_BOOTSTRAP_SERVERS,
@@ -29,8 +47,10 @@ class KafkaController(object):
                 enable_auto_commit=True,
                 value_deserializer=lambda x: json.loads(x.decode('utf-8'))
             )
+
         else:
             self.consumer = None
+
 
 
     def __enter__(self):

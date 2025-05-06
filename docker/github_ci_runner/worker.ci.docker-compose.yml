@@ -1,0 +1,18 @@
+version: '3.9'
+services:
+  github-runner:
+#    user: root
+    user: root
+    build: .
+    environment:
+      - ACCESS_TOKEN=${GITHUB_CI_TOKEN}
+      - REPO=${GITHUB_CI_REPO}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - docker-runner-conf:/home/docker/actions-runner/
+
+volumes:
+  docker-runner-conf:
+    name: "docker-runner-conf-1"
+
+
