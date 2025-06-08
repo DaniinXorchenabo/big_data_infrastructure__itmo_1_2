@@ -24,7 +24,7 @@ requests
 tensorboard==2.16.2
 protobuf==5.26.1
 tensorboardx
-jupyterlab==4.4.0rc1
+jupyterlab==4.4.3
 conan==2.9.3
 PyYAML==6.0.1
 opencv-python

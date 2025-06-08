@@ -23,7 +23,7 @@ requests
 tensorboard==2.16.2
 protobuf==5.26.1
 tensorboardx
-jupyterlab==4.4.0rc1
+jupyterlab==4.4.3
 conan
 PyYAML==6.0.2
 opencv-python
@@ -39,7 +39,7 @@ python-dotenv
 openai
 sentencepiece
 datasets
-transformers~=4.48.3
+transformers~=4.51.3
 scikit-learn
 pytorch-msssim
 
@@ -48,8 +48,6 @@ scipy
 numpy
 matplotlib
 seaborn[stats]
-onnxruntime==1.20.1
-sympy==1.13.1
 jax
 git+https://github.com/aaguirreme/multiZ-py.git
 nltk
@@ -71,4 +69,4 @@ efficientnet_pytorch
 roboflow
 ultralytics
 sacremoses
-pyspark
+pyspark==3.5.6
