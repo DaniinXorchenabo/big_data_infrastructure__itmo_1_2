@@ -1,0 +1,139 @@
+
+
+master:
+#  service:
+#    type: NodePort               # сделает внешний LB
+#    ports:
+#      spark:
+#        port: 7077
+#        nodePort: 30777      # если вы предпочитаете NodePort
+#      ui:
+#        port: 8080
+#        nodePort: 30080
+#  service:
+#    - name: spark-port
+#      port: 7077
+#      nodePort: 30777
+#      type: NodePort
+#    - name: ui
+#      port: 8080
+#      nodePort: 30080
+#      type: NodePort
+  service:
+    type: ClusterIP
+    ports:
+      http: 80
+      https: 443
+      cluster: 7077
+      ui: 8080
+  nodePorts:
+    http: 30881
+    https: 30480
+    cluster: 30777
+    ui: 30880
+
+  extraEnvVars:              # чтобы мастер рекламировал своё DNS-имя/адрес
+    - name: SPARK_MASTER_HOST
+      value: "0.0.0.0"        # слушаем на всех интерфейсах
+    - name: SPARK_MASTER_WEBUI_PORT
+      value: "8080"
+    - name: SPARK_RPC_AUTHENTICATION_ENABLED
+      value: "no"
+    - name: SPARK_RPC_ENCRYPTION_ENABLED
+      value: "no"
+    - name: SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED
+      value: "no"
+    - name: SPARK_SSL_ENABLED
+      value: "no"
+    - name: SPARK_USER
+      value: "root"
+    - name: PYSPARK_PYTHON
+      value: "/opt/bitnami/python/bin/python3"
+worker:
+  replicaCount: 2
+  extraEnvVars:
+    - name: SPARK_WORKER_CORES
+      value: "1"
+    - name: SPARK_WORKER_MEMORY
+      value: "2G"
+    - name: SPARK_RPC_AUTHENTICATION_ENABLED
+      value: "no"
+    - name: SPARK_RPC_ENCRYPTION_ENABLED
+      value: "no"
+    - name: SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED
+      value: "no"
+    - name: SPARK_SSL_ENABLED
+      value: "no"
+    - name: SPARK_USER
+      value: "root"
+    - name: PYSPARK_PYTHON
+      value: "/opt/bitnami/python/bin/python3"
+
+
+
+backend:
+  deployment:
+    name:
+    replicas: 2
+  container:
+    name:
+    resources: {}
+#      limits:
+#        memory: 1024Mi
+#        cpu: 500m
+#      requests:
+#        memory: 512Mi
+#        cpu: 100m
+  service:
+    name:
+    port: 8080
+  image:
+    name: anshelen/microservices-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  hpa:
+    enabled: false
+    name:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+
+gateway:
+  deployment:
+    name:
+    replicas: 2
+  container:
+    name:
+    resources: {}
+#      limits:
+#        memory: 1024Mi
+#        cpu: 500m
+#      requests:
+#        memory: 512Mi
+#        cpu: 100m
+  service:
+    name:
+    port: 80
+#   Can be one of ClusterIP, NodePort or LoadBalancer
+    type: LoadBalancer
+  image:
+    name: anshelen/microservices-gateway
+    tag: latest
+    pullPolicy: IfNotPresent
+  hpa:
+    enabled: false
+    name:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+
+secrets:
+  secret: default-secret
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the release and
+  # chart names
+  name:
