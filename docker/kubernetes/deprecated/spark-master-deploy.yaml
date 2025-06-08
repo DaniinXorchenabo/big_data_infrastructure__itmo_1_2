@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-master
+  namespace: spark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-master
+  template:
+    metadata:
+      labels:
+        app: spark-master
+    spec:
+      containers:
+      - name: spark-master
+        image: bitnami/spark:latest
+        env:
+          - name: SPARK_MODE
+            value: "master"
+          - name: SPARK_MASTER_HOST
+            value: "0.0.0.0"
+          - name: SPARK_MASTER_PORT
+            value: "7077"
+          - name: SPARK_MASTER_WEBUI_PORT
+            value: "8080"
+          - name: SPARK_RPC_AUTHENTICATION_ENABLED
+            value: "no"
+          - name: SPARK_RPC_ENCRYPTION_ENABLED
+            value: "no"
+          - name: SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED
+            value: "no"
+          - name: SPARK_SSL_ENABLED
+            value: "no"
+
+        ports:
+          - containerPort: 7077
+          - containerPort: 8080
+          - containerPort: 45555
+          - containerPort: 4040
+
+        command: [ "/bin/bash", "-c" ]
+        args:
+          - |         
+            chown spark -R  /opt/bitnami/spark/work
+            
+            set -o errexit
+            set -o nounset
+            set -o pipefail
+            #set -o xtrace
+            
+            # Load libraries
+            . /opt/bitnami/scripts/libspark.sh
+            . /opt/bitnami/scripts/libos.sh
+            
+            # Load Spark environment settings
+            . /opt/bitnami/scripts/spark-env.sh
+            
+            if [ "$SPARK_MODE" == "master" ]; then
+                # Master constants
+                EXEC=$(command -v start-master.sh)
+                ARGS=()
+                info "** Starting Spark in master mode **"
+            else
+                # Worker constants
+                EXEC=$(command -v start-worker.sh)
+                ARGS=("$SPARK_MASTER_URL")
+                info "** Starting Spark in worker mode **"
+            fi
+            if am_i_root; then
+                exec_as_user "$SPARK_DAEMON_USER" "$EXEC" "${ARGS[@]-}"
+            else
+                exec "$EXEC" "${ARGS[@]-}"
+            fi
+
+            exec /opt/bitnami/spark/bin/spark-class org.apache.spark.deploy.master.Master
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-master
+  namespace: spark
+spec:
+  selector:
+    app: spark-master
+  ports:
+  - name: spark-port
+    port: 7077
+    targetPort: 7077
+  - name: web-ui
+    port: 10005
+    targetPort: 8080
+  - name: spark-driver
+    port: 45555
+    targetPort: 45555
+  type: LoadBalancer
