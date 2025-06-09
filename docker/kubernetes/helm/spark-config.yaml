@@ -45,10 +45,10 @@ master:
       value: "no"
     - name: SPARK_SSL_ENABLED
       value: "no"
-    - name: SPARK_USER
-      value: "root"
-    - name: PYSPARK_PYTHON
-      value: "/opt/bitnami/python/bin/python3"
+#    - name: SPARK_USER
+#      value: "root"
+#    - name: PYSPARK_PYTHON
+#      value: "/opt/bitnami/python/bin/python3"
 worker:
   replicaCount: 2
   extraEnvVars:
@@ -64,10 +64,10 @@ worker:
       value: "no"
     - name: SPARK_SSL_ENABLED
       value: "no"
-    - name: SPARK_USER
-      value: "root"
-    - name: PYSPARK_PYTHON
-      value: "/opt/bitnami/python/bin/python3"
+#    - name: SPARK_USER
+#      value: "root"
+#    - name: PYSPARK_PYTHON
+#      value: "/opt/bitnami/python/bin/python3"
 
 
 
