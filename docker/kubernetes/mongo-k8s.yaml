@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind:  StatefulSet
+metadata:
+  name: mongodb
+spec:
+  serviceName: "mongodb"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      securityContext:
+        fsGroup: 999
+#      initContainers:
+#        - name: init-remove-lock
+#          image: mongo:6-jammy
+#          command: [ "sh", "-c", "rm -f /data/db/mongod.lock || true" ]
+##          command: [ "sh", "-c", "mongod -dbpath /data/db --repair" ]  # "mongod -dbpath /data/db --repair",  "mongod -dbpath /data/db"
+#          env:
+#            - name: MONGO_INITDB_ROOT_USERNAME
+#              value: admin
+#            - name: MONGO_INITDB_ROOT_PASSWORD
+#              value: password
+#          volumeMounts:
+#            - name: mongo-data
+#              mountPath: /data/db
+      containers:
+        - name: mongodb
+          image: mongo:6-jammy  # --repair
+          command: [ "sh", "-c", "mongod --bind_ip_all -dbpath /data/db"]  # "mongod -dbpath /data/db --repair",  "mongod -dbpath /data/db"
+          ports:
+            - containerPort: 27017
+            - containerPort: 28017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: admin
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: password
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
+      volumes:
+        - name:  mongo-data
+          hostPath:
+            path: /mnt/host/d/jobs/itmo/1_2/big_data_infrastructure__itmo_1_2/neural/datasets/lab_5/mongo # замените на реальный путь к папке на Windows
+            type: DirectoryOrCreate
+
+---
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: mongodb
+#spec:
+#  selector:
+#    app: mongodb
+#  ports:
+#    - name: mongodb
+#      port: 27017
+#      targetPort: 27017
+#    - name: web-status
+#      port: 28017
+#      targetPort: 28017
+#  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-svc
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - name: mongodb
+      port: 27017
+      targetPort: 27017
+      nodePort: 30717
+    - name: web-status
+      port: 28017
+      targetPort: 28017
+      nodePort: 30817
+  type: NodePort
