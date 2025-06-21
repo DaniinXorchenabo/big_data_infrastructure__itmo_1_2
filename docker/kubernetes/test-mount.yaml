@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-demo
+spec:
+  containers:
+  - name: app
+    image: nginx:stable
+    volumeMounts:
+    - name: host-volume
+      mountPath: /usr/share/nginx/html   # внутри контейнера будет доступна здесь
+  volumes:
+  - name: host-volume
+    hostPath:
+      path: /mnt/host/d/jobs/itmo/1_2/big_data_infrastructure__itmo_1_2/neural/datasets/lab_5/test_html # замените на реальный путь к папке на Windows
+      type: DirectoryOrCreate           # создаст папку, если её нет
