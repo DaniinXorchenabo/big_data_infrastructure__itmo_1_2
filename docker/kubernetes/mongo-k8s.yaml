@@ -15,19 +15,19 @@ spec:
     spec:
       securityContext:
         fsGroup: 999
-#      initContainers:
-#        - name: init-remove-lock
-#          image: mongo:6-jammy
-#          command: [ "sh", "-c", "rm -f /data/db/mongod.lock || true" ]
-##          command: [ "sh", "-c", "mongod -dbpath /data/db --repair" ]  # "mongod -dbpath /data/db --repair",  "mongod -dbpath /data/db"
-#          env:
-#            - name: MONGO_INITDB_ROOT_USERNAME
-#              value: admin
-#            - name: MONGO_INITDB_ROOT_PASSWORD
-#              value: password
-#          volumeMounts:
-#            - name: mongo-data
-#              mountPath: /data/db
+      initContainers:
+        - name: init-remove-lock
+          image: mongo:6-jammy
+          command: [ "sh", "-c", "rm -f /data/db/mongod.lock || true" ]
+#          command: [ "sh", "-c", "mongod -dbpath /data/db --repair" ]  # "mongod -dbpath /data/db --repair",  "mongod -dbpath /data/db"
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: admin
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              value: password
+          volumeMounts:
+            - name: mongo-data
+              mountPath: /data/db
       containers:
         - name: mongodb
           image: mongo:6-jammy  # --repair
