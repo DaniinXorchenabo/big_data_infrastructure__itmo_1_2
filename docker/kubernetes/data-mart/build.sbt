@@ -9,16 +9,17 @@ scalaVersion := "2.12.17"
 // Зависимости вашего проекта
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-sql" % "3.5.6" % "provided",
+   "org.apache.spark" %% "spark-mllib" % "3.5.1" % "provided",
   "org.mongodb.spark" %% "mongo-spark-connector" % "10.3.0" % "provided",
   "org.neo4j" % "neo4j-connector-apache-spark_2.12" % "5.3.1_for_spark_3" % "provided",
-  "com.typesafe" % "config" % "1.4.2"
+  "com.typesafe" % "config" % "1.4.2",
+  "com.typesafe.akka" %% "akka-http" % "10.2.10",
+  "com.typesafe.akka" %% "akka-stream" % "2.6.21",
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.10"
 )
 
-
 // Указываем главный класс для манифеста
-assembly / mainClass := Some("com.example.datamart.HttpDataMartApp")
-
-
+// assembly / mainClass := Some("com.example.datamart.HttpDataMartApp")
 // Настройка sbt-assembly
 assembly / assemblyJarName := "datamart-assembly-0.1.jar"
 
