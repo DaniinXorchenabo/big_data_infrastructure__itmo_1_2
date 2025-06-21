@@ -50,10 +50,15 @@ master:
 #    - name: PYSPARK_PYTHON
 #      value: "/opt/bitnami/python/bin/python3"
 worker:
-  replicaCount: 2
+  replicaCount: 3
+  hpa:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
   extraEnvVars:
     - name: SPARK_WORKER_CORES
-      value: "1"
+      value: "2"
     - name: SPARK_WORKER_MEMORY
       value: "2G"
     - name: SPARK_RPC_AUTHENTICATION_ENABLED
@@ -74,7 +79,7 @@ worker:
 backend:
   deployment:
     name:
-    replicas: 2
+    replicas: 4
   container:
     name:
     resources: {}
@@ -94,8 +99,8 @@ backend:
   hpa:
     enabled: false
     name:
-    minReplicas: 1
-    maxReplicas: 3
+    minReplicas: 3
+    maxReplicas: 5
     targetCPUUtilizationPercentage: 50
 
 gateway:
