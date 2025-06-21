@@ -200,6 +200,46 @@ services:
       - MONGO_URI=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017  # /off?authSource=admin
       - TARGET_COLLECTION=cleaned_products
 
+
+# 6. Data Mart (витрина данных) на Scala/Spark
+  data-mart-k8s:
+    build:
+      context: ../docker/kubernetes/data-mart
+      dockerfile: Dockerfile
+    image: daniinxorchenabo/data-mart-k8s:latest-dev-15
+    container_name: data-mart-2
+
+    env_file:
+      - ../env/.env
+    networks:
+      - spark-network
+
+
+# 6. Data Mart (витрина данных) на Scala/Spark
+  data-mart-python-k8s:
+    build:
+      context: ../docker/kubernetes/data-mart-python
+      dockerfile: Dockerfile
+    image: daniinxorchenabo/data-mart-python-k8s:latest-dev-7
+    container_name: data-mart-3
+
+    env_file:
+      - ../env/.env
+    networks:
+      - spark-network
+
+  spark-build:
+    build:
+      context: ../docker/kubernetes/helm
+      dockerfile: Dockerfile
+    image: daniinxorchenabo/spark-k8s:latest
+    container_name: modified-spark
+
+    env_file:
+      - ../env/.env
+    networks:
+      - spark-network
+
 #      - TARGET_PATH=hdfs://datanode:9000/data-mart
 #    volumes:
 #      - hadoop_conf:/opt/hadoop/etc/hadoop:ro
