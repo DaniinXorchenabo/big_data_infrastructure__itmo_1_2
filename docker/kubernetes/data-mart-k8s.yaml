@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: data-mart
+spec:
+  serviceName: "data-mart"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-mart
+  template:
+    metadata:
+      labels:
+        app: data-mart
+    spec:
+      containers:
+      - name: data-mart
+        image: daniinxorchenabo/data-mart-python-k8s:latest-dev-7
+        env:
+        - name: MONGO_URI
+          value: mongodb://admin:password@host.docker.internal:30717
+        ports:
+        - containerPort: 12080
+        - containerPort: 45555
+        - containerPort: 45556
+        - containerPort: 31555
+        - containerPort: 31556
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-mart
+spec:
+  selector:
+    app: data-mart
+  ports:
+  - name: web-ui
+    port: 12080
+    targetPort: 12080
+    nodePort: 31280
+    protocol: TCP
+  - name: driver-port
+    port: 31555
+    targetPort: 31555
+    nodePort: 31555
+  - name: block-manager-port
+    port: 31556
+    targetPort: 31556
+    nodePort: 31556
+  type: NodePort
