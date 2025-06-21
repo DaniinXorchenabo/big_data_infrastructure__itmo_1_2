@@ -26,7 +26,7 @@ COPY project/ ./project/
 COPY ./application.conf ./src/main/resources/application.conf
 COPY ./DataMartApp.scala ./src/main/scala/com/example/datamart/DataMartApp.scala
 
-COPY ./Preprocessing.scala ./srcmain/scala/com/example/datamart/transform/Preprocessing.scala
+COPY ./Preprocessing.scala ./src/main/scala/com/example/datamart/transform/Preprocessing.scala
 
 # Сборка fat-jar
 RUN sbt assembly
