@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-worker
+  namespace: spark
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spark-worker
+  template:
+    metadata:
+      labels:
+        app: spark-worker
+    spec:
+      containers:
+        - name: spark-worker
+          image: bitnami/spark:latest
+          env:
+            - name: SPARK_MODE
+              value: worker
+            - name: SPARK_MASTER_HOST
+              value: "spark-master"
+            - name: SPARK_MASTER_PORT
+              value: "7077"
+            - name: SPARK_WORKER_WEBUI_PORT
+              value: "8081"
+#              2025-06-06 15:42:06 /opt/bitnami/spark/sbin/start-worker.sh: line 78: tcp://10.100.36.205:8081 + 1 - 1 : syntax error in expression (error token is "://10.100.36.205:8081 + 1 - 1 ")
+            - name: SPARK_WORKER_PORT
+              value: "7078"
+            - name: SPARK_RPC_AUTHENTICATION_ENABLED
+              value: "no"
+            - name: SPARK_RPC_ENCRYPTION_ENABLED
+              value: "no"
+            - name: SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED
+              value: "no"
+            - name: SPARK_SSL_ENABLED
+              value: "no"
+            - name: SPARK_MASTER_URL
+              value: "spark://spark-master:7077"
+            - name: SPARK_WORKER_MEMORY
+              value: "2G"
+            - name: SPARK_WORKER_CORES
+              value: "2"
+            - name: SPARK_USER
+              value: "root"
+            - name: PYSPARK_PYTHON
+              value: "/opt/bitnami/python/bin/python3"
+          ports:
+            - containerPort: 8081
+            - containerPort: 8981
+            - containerPort: 11111
+          command: [ "/bin/bash", "-c" ]
+          args:
+            - |
+              
+              chown spark -R  /opt/bitnami/spark/work
+              
+              set -o errexit
+              set -o nounset
+              set -o pipefail
+              #set -o xtrace
+              
+              # Load libraries
+              . /opt/bitnami/scripts/libspark.sh
+              . /opt/bitnami/scripts/libos.sh
+              
+              # Load Spark environment settings
+              . /opt/bitnami/scripts/spark-env.sh
+              
+              if [ "$SPARK_MODE" == "master" ]; then
+                  # Master constants
+                  EXEC=$(command -v start-master.sh)
+                  ARGS=()
+                  info "** Starting Spark in master mode **"
+              else
+                  # Worker constants
+                  EXEC=$(command -v start-worker.sh)
+                  ARGS=("$SPARK_MASTER_URL")
+                  info "** Starting Spark in worker mode **"
+              fi
+              if am_i_root; then
+                  exec_as_user "$SPARK_DAEMON_USER" "$EXEC" "${ARGS[@]-}"
+              else
+                  exec "$EXEC" "${ARGS[@]-}"
+              fi
+              spark-class org.apache.spark.deploy.worker.Worker \
+                spark://spark-master:7077
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: spark-worker
+  namespace: spark
+spec:
+  selector:
+    app: spark-worker
+  ports:
+    - name: spark-worker
+      port: 10006
+      targetPort: 7078
+    - name: spark-worker-ui
+      port: 10106
+      targetPort: 8081
+    - name: test-http-request
+      port: 11111
+      targetPort: 11111
+  type: LoadBalancer

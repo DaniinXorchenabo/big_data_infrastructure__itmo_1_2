@@ -1,0 +1,77 @@
+version: '3.9'
+
+services:
+
+  dl:
+    tty: true
+    restart: 'no'
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
+    build:
+      context: ../..
+      dockerfile: ../lighting.Dockerfile
+      target: backend
+      args:
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
+    env_file:
+      - ../../env/unittests.env
+    container_name: dl_labs_prod
+    volumes: # !override
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /mnt/wslg:/mnt/wslg
+      - /usr/lib/wsl:/usr/lib/wsl
+      - type: bind
+        source: ../docker/jupyter_config
+        target: /root/.jupyter/
+      - type: bind
+        source: ..
+        target: /workspace/NN
+
+    command: >
+      bash -c "
+      fastapi run --workers ${BACKEND_APP_WORKERS_COUNT} --port ${BACKEND_PORT} --host 0.0.0.0  main.py
+      "
+    ports:
+      - "10000:10000"
+    healthcheck:
+      test: curl --fail http://dl:${BACKEND_PORT}/healthcheck || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 10s
+      retries: 10
+
+
+  unittests:
+    depends_on:
+      dl:
+        condition: service_healthy
+    tty: true
+    restart: 'no'
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cu122-latest
+    build:
+      context: ../..
+      dockerfile: ../lighting.Dockerfile
+      target: backend
+      args:
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-cu_12_2.txt}
+
+    container_name: dl_labs_unittests
+
+    command: pytest -c ./tests/pytest.ini
+
+    environment:
+      - BACKEND_HOST_URL=dl
+    env_file:
+      - ../../env/unittests.env
+    volumes:
+#      - ../:/workspace:cached
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - /mnt/wslg:/mnt/wslg
+      - /usr/lib/wsl:/usr/lib/wsl
+      - type: bind
+        source: ../docker/jupyter_config
+        target: /root/.jupyter/
+      - type: bind
+        source: ..
+        target: /workspace/NN
+    ports:
+      - "10000:10000"

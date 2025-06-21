@@ -13,14 +13,13 @@ from fastapi import FastAPI
 import logging
 
 from httpx import AsyncClient
-from sympy.physics.units import years
 
 from src.configs.config import CONFIG
 from src.core.db.db_controller import DBController
 from src.core.db.init_db import init_db_conn
 from src.web.depends.db_depends import get_db
-from src.web.events.init import main_lifespan
-from src.web.init_app import init_producer
+from src.web.events.producer_init import producer_lifespan
+from src.web.init_producer_app import init_producer
 from tests.configs import BASE_URL
 
 
@@ -46,7 +45,7 @@ def event_loop():
 @lru_cache(maxsize=None)
 def create_app():
 
-    app = FastAPI(lifespan=main_lifespan)
+    app = FastAPI(lifespan=producer_lifespan)
     app = init_producer(app)
     return app
 

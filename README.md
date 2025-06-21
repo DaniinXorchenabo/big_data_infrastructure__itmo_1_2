@@ -34,7 +34,7 @@ docker exec -it  vault mkdir -p /vault/data
 docker exec -it  vault chown -R vault /vault/data
 docker exec -it  vault vault operator init -format=json 
 ```
-8.2. Add `root_token` and `unseal_keys` to /env/.env and  /env/unittests.env
+8.2. Add `root_token` and `unseal_keys` to /env/.env and  /env/.env
 
 8.3. Add necessary secrets as environ variables
 ```bash
@@ -54,41 +54,37 @@ export AI_WEIGHTS_REPO_FILENAME =
 
 8. Run docker image
 
-Run main only `docker-compose`
+Run main only `docker-compose` 
 ```bash
 docker-compose -f .\docker\docker-compose.yml --env-file .\env\.env  up -d --build --force-recreate
 ```
 
-Run main `docker-compose` with `gpu`
+Run main `docker-compose` with `gpu` (production usage)
 ```bash
-docker-compose -f .\docker\docker-compose.yml -f .\docker\gpu.docker-compose.yml  --env-file .\env\.env  up -d --build --force-recreate
+docker-compose -f .\docker\docker-compose.yml -f .\docker\gpu.docker-compose.yml  --env-file .\env\.env  up -d --build --force-recreate 
 ```
 
-Run for developing in jupyter notebooks:
+Run  autotests 
 ```bash
-docker-compose -f .\docker\dev.docker-compose.yml --env-file .\env\.env  up -d --build
+docker-compose -f .\docker\docker-compose.yml -f .\docker\autotest.docker-compose.yml  --env-file .\env\unittests.env  up -d --build --force-recreate 
+docker exec -it producer pytest -vv -c ./tests/pytest.ini
 ```
 
-Run for testing
+Run autotests with `gpu`
 ```bash
-docker-compose -f .\docker\dev.docker-compose.yml -f .\docker\test.docker-compose.yml --env-file .\env\unittests.env  up  --no-deps unittests --build
+docker-compose -f .\docker\docker-compose.yml -f .\docker\autotest.docker-compose.yml  -f .\docker\gpu.docker-compose.yml --env-file .\env\unittests.env  up -d --build --force-recreate 
+docker exec -it producer pytest -vv -c ./tests/pytest.ini
 ```
 
-Run for production usage
+
+Run for developing in `jupyter notebooks` with `gpu`:
 ```bash
-docker-compose -f .\docker\dev.docker-compose.yml -f .\docker\prod.docker-compose.yml --env-file .\env\.env  up -d  --build
+docker-compose -f .\docker\docker-compose.yml -f .\docker\gpu.docker-compose.yml -f .\docker\composes\gpu.dev.docker-compose.yml --env-file .\env\.env  up -d --build --force-recreate
 ```
 
-Or your run dockerfile only (deprecated)
-
-* In windows console:
+Run for developing in `jupyter notebooks` without `gpu`:
 ```bash
-docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864  --memory="40g" --memory-swap="60g" -p 0.0.0.0:8889:8888 -p 0.0.0.0:6006:6006 -p 0.0.0.0:6007:6007 --rm -it --env-file ./env/.env -v .:/workspace/NN --mount type=bind,src=%cd%/docker/jupyter_config,dst=/root/.jupyter/  --mount type=bind,src=%cd%/neural/datasets/fiftyone/,dst=/root/fiftyone/   daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest ./docker/before_learn.sh
-```
-
-* In linux console:
-```bash
-docker run --gpus all --ipc=host --ulimit memlock=-1 --ulimit stack=67108864  --memory="40g" --memory-swap="60g"  -p 0.0.0.0:8889:8888 -p 0.0.0.0:6006:6006 -p 0.0.0.0:6007:6007 --rm -it --env-file ./env/.env -v .:/workspace/NN --mount type=bind,src=$(PWD)/docker/jupyter_config,dst=/root/.jupyter/   daniinxorchenabo/itmo_dl_labs-env:lighting-cu122-latest ./docker/before_learn.sh
+docker-compose -f .\docker\docker-compose.yml  -f .\docker\composes\cpu.dev.docker-compose.yml --env-file .\env\.env  up -d --build --force-recreate                         ```
 ```
 
 

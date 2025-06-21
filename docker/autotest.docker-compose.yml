@@ -1,0 +1,18 @@
+version: '3.9'
+
+services:
+  producer:
+    image: daniinxorchenabo/itmo-prod-dl-labs-env:lighting-cpu-producer-autotest-latest
+    build:
+      context: ..
+      dockerfile: ./docker/lighting.Dockerfile
+      target: autotest_build
+      args:
+        REQUIREMENTS_FILE: ${BUILD_BACKEND_REQUIREMENTS_FILE:-useless}
+
+    env_file:
+      - ../env/unittests.env
+    volumes:
+      - type: bind
+        source: ..
+        target: /workspace/NN
