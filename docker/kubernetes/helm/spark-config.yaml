@@ -1,24 +1,6 @@
 
 
 master:
-#  service:
-#    type: NodePort               # сделает внешний LB
-#    ports:
-#      spark:
-#        port: 7077
-#        nodePort: 30777      # если вы предпочитаете NodePort
-#      ui:
-#        port: 8080
-#        nodePort: 30080
-#  service:
-#    - name: spark-port
-#      port: 7077
-#      nodePort: 30777
-#      type: NodePort
-#    - name: ui
-#      port: 8080
-#      nodePort: 30080
-#      type: NodePort
   service:
     type: ClusterIP
     ports:
@@ -58,9 +40,15 @@ worker:
     targetCPUUtilizationPercentage: 75
   extraEnvVars:
     - name: SPARK_WORKER_CORES
-      value: "2"
+      valueFrom:
+        secretKeyRef:
+          name: spark-cluster-secrets
+          key: K8S_SPARK_NODE_WORKER_CORES
     - name: SPARK_WORKER_MEMORY
-      value: "2G"
+      valueFrom:
+        secretKeyRef:
+          name: spark-cluster-secrets
+          key: K8S_SPARK_NODE_WORKER_MEMORY
     - name: SPARK_RPC_AUTHENTICATION_ENABLED
       value: "no"
     - name: SPARK_RPC_ENCRYPTION_ENABLED

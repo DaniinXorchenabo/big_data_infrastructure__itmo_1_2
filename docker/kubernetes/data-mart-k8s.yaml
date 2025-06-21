@@ -17,8 +17,72 @@ spec:
       - name: data-mart
         image: daniinxorchenabo/data-mart-python-k8s:latest-dev-7
         env:
-        - name: MONGO_URI
-          value: mongodb://admin:password@host.docker.internal:30717
+          - name: K8S_MONGO_USER
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_MONGO_USER
+          - name: K8S_MONGO_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_MONGO_PASSWORD
+          - name: K8S_MONGO_EXTERNAL_HOST
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_MONGO_EXTERNAL_HOST
+          - name: K8S_MONGO_EXTERNAL_PORT
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_MONGO_EXTERNAL_PORT
+
+          - name: K8S_SPARK_MASTER_URL
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_SPARK_MASTER_URL
+          - name: K8S_SPARK_EXECUTOR_MEMORY
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_SPARK_EXECUTOR_MEMORY
+          - name: K8S_SPARK_EXECUTOR_CORES
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_SPARK_EXECUTOR_CORES
+          - name: K8S_SPARK_EXECUTOR_INSTANCES
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_SPARK_EXECUTOR_INSTANCES
+          - name: K8S_SPARK_DRIVER_MEMORY
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_DATAMART_SPARK_DRIVER_HOST
+          - name: K8S_SPARK_DRIVER_HOST
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_DATAMART_SPARK_DRIVER_HOST
+          - name: K8S_SPARK_DRIVER_BIND_ADDRESS
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_SPARK_DRIVER_BIND_ADDRESS
+          - name: K8S_SPARK_DRIVER_PORT
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_DATAMART_SPARK_DRIVER_PORT
+          - name: K8S_SPARK_BLOCKMANAGER_PORT
+            valueFrom:
+              secretKeyRef:
+                name: spark-cluster-secrets
+                key: K8S_DATAMART_SPARK_BLOCKMANAGER_PORT
         ports:
         - containerPort: 12080
         - containerPort: 45555
